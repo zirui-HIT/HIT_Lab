@@ -1,0 +1,11 @@
+.vscode
+
+Lab1/src/__pycache__
+
+Lab2/src/__pycache__
+
+Lab3/src/__pycache__
+Lab3/src/classifier/__pycache__
+
+Lab4/data
+Lab4/src/__pycache__

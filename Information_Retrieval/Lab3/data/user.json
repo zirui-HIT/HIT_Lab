@@ -1,0 +1,4 @@
+{"name": "游客", "password": "-1", "authority": 0}
+{"name": "普通用户", "password": "233", "authority": 1}
+{"name": "高级用户", "password": "666", "authority": 2}
+{"name": "管理员", "password": "999", "authority": 3}

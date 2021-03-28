@@ -1,0 +1,4 @@
+ltp
+sklearn-crfsuite
+python-crfsuite
+numpy

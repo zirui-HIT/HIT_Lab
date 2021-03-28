@@ -1,0 +1,10 @@
+.vscode
+
+Lab1/src/__pycache__
+Lab1/src/storage/__pycache__
+Lab1/src/tokenizer/__pycache__
+Lab1/src/utils/__pycache__
+
+Lab2/src/__pycache__
+Lab2/src/utils/__pycache__
+Lab2/model/model.pkl

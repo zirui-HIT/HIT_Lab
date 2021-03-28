@@ -1,0 +1,6 @@
+.vscode
+debug.log
+
+Lab2/src/__pycache__
+Lab2/src/protocol/__pycache__
+Lab2/src/util/__pycache__

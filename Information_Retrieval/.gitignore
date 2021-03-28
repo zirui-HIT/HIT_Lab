@@ -1,0 +1,14 @@
+.vscode
+
+Lab1/data/attachment
+Lab1/src/__pycache__
+Lab1/src/utils/__pycache__
+Lab1/data/craw_result
+
+Lab2/src/data_process.py
+Lab2/src/utils/__pycache__
+Lab2/model
+
+Lab3/src/preprocess.py
+Lab3/data/attachment
+Lab3/src/__pycache__
