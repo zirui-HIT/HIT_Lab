@@ -6,21 +6,21 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>468</width>
-    <height>298</height>
+    <width>800</width>
+    <height>480</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>选课管理系统 by WDZRMPCBIT</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QPushButton" name="add_college_button">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>30</y>
-      <width>75</width>
-      <height>23</height>
+      <x>280</x>
+      <y>50</y>
+      <width>240</width>
+      <height>40</height>
      </rect>
     </property>
     <property name="text">
@@ -30,10 +30,10 @@
    <widget class="QPushButton" name="add_teacher_button">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>70</y>
-      <width>75</width>
-      <height>23</height>
+      <x>280</x>
+      <y>130</y>
+      <width>240</width>
+      <height>40</height>
      </rect>
     </property>
     <property name="text">
@@ -43,10 +43,10 @@
    <widget class="QPushButton" name="add_student_button">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>110</y>
-      <width>75</width>
-      <height>23</height>
+      <x>280</x>
+      <y>210</y>
+      <width>240</width>
+      <height>40</height>
      </rect>
     </property>
     <property name="text">
@@ -56,10 +56,10 @@
    <widget class="QPushButton" name="add_course_button">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>150</y>
-      <width>75</width>
-      <height>23</height>
+      <x>280</x>
+      <y>290</y>
+      <width>240</width>
+      <height>40</height>
      </rect>
     </property>
     <property name="text">
@@ -69,32 +69,16 @@
    <widget class="QPushButton" name="select_course_button">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>190</y>
-      <width>75</width>
-      <height>23</height>
+      <x>280</x>
+      <y>370</y>
+      <width>240</width>
+      <height>40</height>
      </rect>
     </property>
     <property name="text">
      <string>选课</string>
     </property>
    </widget>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>468</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menu_by_WDZRMPCBIT">
-    <property name="title">
-     <string>选课管理系统 by WDZRMPCBIT</string>
-    </property>
-   </widget>
-   <addaction name="menu_by_WDZRMPCBIT"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
