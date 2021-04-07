@@ -20,7 +20,6 @@ class Ui_MainWindow(object):
         self.add_college_button = QtWidgets.QPushButton(self.centralwidget)
         self.add_college_button.setGeometry(QtCore.QRect(280, 50, 240, 40))
         self.add_college_button.setObjectName("add_college_button")
-        self.add_college_button.clicked.connect(self._add_college)
 
         self.add_teacher_button = QtWidgets.QPushButton(self.centralwidget)
         self.add_teacher_button.setGeometry(QtCore.QRect(280, 130, 240, 40))
@@ -60,28 +59,39 @@ class Ui_MainWindow(object):
         self.add_course_button.setText(_translate("MainWindow", "新增课程"))
         self.select_course_button.setText(_translate("MainWindow", "选课"))
 
-    def _add_college(self):
+    '''
+    def _add_college_widget(self):
         from add_college import Ui_AddCollegeWidget
-        self._new_widget(Ui_AddCollegeWidget)
+        self._college_widget = QtWidgets.QWidget()
+        ui = Ui_AddCollegeWidget()
+        ui.setupUi(self._college_widget)
+        self._college_widget.show()
+    '''
 
     def _add_teacher(self):
         from add_teacher import Ui_AddTeacherWidget
-        self._new_widget(Ui_AddTeacherWidget)
+        self._teacher_widget = QtWidgets.QWidget()
+        ui = Ui_AddTeacherWidget()
+        ui.setupUi(self._teacher_widget)
+        self._teacher_widget.show()
 
     def _add_student(self):
         from add_student import Ui_AddStudentWidget
-        self._new_widget(Ui_AddStudentWidget)
+        self._student_widget = QtWidgets.QWidget()
+        ui = Ui_AddStudentWidget()
+        ui.setupUi(self._student_widget)
+        self._student_widget.show()
 
     def _add_course(self):
         from add_course import Ui_AddCourseWidget
-        self._new_widget(Ui_AddCourseWidget)
+        self._course_widget = QtWidgets.QWidget()
+        ui = Ui_AddCourseWidget()
+        ui.setupUi(self._course_widget)
+        self._course_widget.show()
 
     def _select_course(self):
         from select_course import Ui_SelectCourseWidget
-        self._new_widget(Ui_SelectCourseWidget)
-
-    def _new_widget(self, Widget):
-        self._widget = QtWidgets.QWidget()
-        ui = Widget()
-        ui.setupUi(self._widget)
-        self._widget.show()
+        self._select_course_widget = QtWidgets.QWidget()
+        ui = Ui_SelectCourseWidget()
+        ui.setupUi(self._select_course_widget)
+        self._select_course_widget.show()
