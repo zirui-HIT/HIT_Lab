@@ -13,6 +13,8 @@ from main_window import Ui_MainWindow
 from add_college import Ui_AddCollegeWidget
 from add_teacher import Ui_AddTeacherWidget
 from add_student import Ui_AddStudentWidget
+from add_course import Ui_AddCourseWidget
+from select_course import Ui_SelectCourseWidget
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
@@ -35,6 +37,16 @@ if __name__ == '__main__':
     add_student_ui = Ui_AddStudentWidget()
     add_student_ui.setupUi(add_student_widget)
     main_ui.add_student_button.clicked.connect(add_student_widget.show)
+
+    add_course_widget = QtWidgets.QWidget()
+    add_course_ui = Ui_AddCourseWidget()
+    add_course_ui.setupUi(add_course_widget)
+    main_ui.add_course_button.clicked.connect(add_course_widget.show)
+
+    select_course_widget = QtWidgets.QWidget()
+    select_course_ui = Ui_SelectCourseWidget()
+    select_course_ui.setupUi(select_course_widget)
+    main_ui.select_course_button.clicked.connect(select_course_widget.show)
 
     main_window.show()
     sys.exit(app.exec_())
