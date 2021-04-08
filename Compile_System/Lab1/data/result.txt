@@ -116,8 +116,3 @@ sum3 <id, sum3> 28
 ; <;, _> 28
 } <}, _> 29
 } <}, _> 30
-
-lexical analyse finished
-
-Lexical error at Line [3]: illegal character $
-Lexical error at Line [9]: illegal constant 00xA5

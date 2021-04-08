@@ -206,6 +206,7 @@ if __name__ == '__main__':
     with open(args.dump_path, 'w') as f:
         for t in token:
             f.write(t + '\n')
-        f.write('\n' + 'lexical analyse finished' + '\n\n')
+    
+    with open(args.log_path, 'w') as f:
         for e in error:
             f.write(e + '\n')
