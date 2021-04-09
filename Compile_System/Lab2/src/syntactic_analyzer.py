@@ -96,10 +96,7 @@ def analyse(words: List[Word], action: Dict[int, Dict[str, str]],
 
         if current_action.startswith('s'):
             next_state = int(current_action[1:])
-            stack.append({
-                'state': next_state,
-                'id': len(ret)
-            })
+            stack.append({'state': next_state, 'id': len(ret)})
             roots.append(len(ret))
             ret.append({'word': words[i], 'child': [], 'id': len(ret)})
             i += 1
@@ -108,9 +105,12 @@ def analyse(words: List[Word], action: Dict[int, Dict[str, str]],
             current_grammar_length = int(current_action[1])
 
             current_node = {
-                'word': Word('_', current_action[0], ret[stack[-1]['id']]['word'].line()),
+                'word':
+                Word('_', current_action[0],
+                     ret[stack[-1]['id']]['word'].line()),
                 'child': [],
-                'id': len(ret)
+                'id':
+                len(ret)
             }
             roots.append(len(ret))
 
@@ -121,18 +121,15 @@ def analyse(words: List[Word], action: Dict[int, Dict[str, str]],
             current_node['child'].reverse()
 
             next_state = int(goto[stack[-1]['state']][current_action[0]])
-            stack.append({
-                'state': next_state,
-                'id': len(ret)
-            })
+            stack.append({'state': next_state, 'id': len(ret)})
 
             ret.append(current_node)
         elif current_action == 'acc':
             print('analyse finished')
             return ret, roots, error
         else:
-            error.append('Syntax error at Line [' + str(words[i].line()) +
-                         ']: ' + '[illegal <' + words[i].kind() + ', ' + words[i].word() + '>]')
+            error.append('Syntax error at Line [%d]: illegal %s' %
+                         (words[i].line(), words[i].kind()))
 
             i += 1
             continue
@@ -150,19 +147,19 @@ def DFS(tree: List[Dict], current: int, depth: int, f):
     f.write(sentence + '\n')
 
     for c in tree[current]['child']:
-        DFS(tree, c, depth+1, f)
+        DFS(tree, c, depth + 1, f)
 
 
 if __name__ == '__main__':
-    action = load_table('Lab2/data/action.txt')
-    goto = load_table('Lab2/data/goto.txt')
-    words = load_words('Lab1/data/a+b_analyzed.txt')
+    action = load_table('Compile_System/Lab2/data/table/action.txt')
+    goto = load_table('Compile_System/Lab2/data/table/goto.txt')
+    words = load_words('Compile_System/Lab1/data/result.txt')
 
     tree, root, error = analyse(words, action, goto)
 
-    with open('Lab2/data/result.txt', 'w') as f:
+    with open('Compile_System/Lab2/data/result.txt', 'w') as f:
         for r in root:
             DFS(tree, r, 0, f)
-        f.write('\n' + 'syntactic analyse finished' + '\n\n')
+    with open('Compile_System/Lab2/data/error.log', 'w') as f:
         for e in error:
             f.write(e + '\n')

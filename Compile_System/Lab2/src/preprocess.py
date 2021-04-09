@@ -411,5 +411,5 @@ if __name__ == '__main__':
     action, goto = get_action_and_goto(items, grammar, 'P')
 
     print('dumping result')
-    dump(action, 'Lab2/data/action.txt')
-    dump(goto, 'Lab2/data/goto.txt')
+    dump(action, 'Lab2/data/table/action.txt')
+    dump(goto, 'Lab2/data/table/goto.txt')

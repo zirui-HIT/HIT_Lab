@@ -9,6 +9,7 @@ int main(){
     int b = 00xA5;
     float c = 10.0;
     int d = 056;
+    int float = 89;
 
     int sum1;
     int sum2;
