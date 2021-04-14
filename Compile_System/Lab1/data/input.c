@@ -20,7 +20,6 @@ int main(){
     sum1 = sum(a, b);
     sum2 = sum(c, d);
 
-
     int sum3;
     if(sum1 < sum2){
         sum3 = sum1 - sum2;
