@@ -1,0 +1,49 @@
+Program -> Defination Program | Assignment Program | Control Program | Function Program | Struct Program | epsilon
+
+Struct -> struct id { Statement }
+Statement -> Defination | Defination , Statement
+
+Defination -> Data id ;
+Data -> Type Array | id Array
+Type -> int | float | bool
+Array -> [ const ] Array | epsilon
+
+Assignment -> id = Value ; | id Index = Value ;
+Value -> Value + Value | Value - Value | Value * Value | Value / Value
+Value -> - Value
+Value -> ( Value )
+Value -> const | id Index
+Index -> epsilon | [ Value ] Index
+
+Control -> If | If Else | While
+If -> if ( Condition ) { Program }
+Else -> else { Program }
+While -> while ( Condition ) { Program }
+Condition -> Condition and Condition | Condition or Condition | not Condition | ( Condition ) | Value Relop Value | 1 | 0
+Relop -> < | <= | == | != | > | >=
+
+Function -> Data id ( Parameter ) { Process }
+Parameter -> epsilon | Defination | Defination , Parameter
+Process -> Program Return
+Return -> epsilon | return id Index ;
+
+end
+
+S -> L = R
+S -> R
+L -> * R
+L -> id
+R -> L
+
+end
+
+以空格分隔字符
+非终结符以大写开头
+
+函数必须有参数
+一行只能定义一个变量
+不能为空函数
+不能用函数返回值进行初始化
+定义时不能进行初始化
+数组长度只能用常量初始化
+布尔真假用1和0表示
