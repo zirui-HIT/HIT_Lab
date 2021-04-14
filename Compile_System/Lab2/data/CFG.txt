@@ -1,54 +1,42 @@
-Program -> Line | Line Program
-Line -> Defination | Assignment | Control | Function | Struct | Call ;
+Module -> epsilon | Defination ; Module | Assignment ; Module | Control Module | Function Module | Struct Module | Call ; Module
+
+Defination -> Data id
+Data -> Type Array
+Type -> int | float | bool | id
+Array -> [ const ] Array | epsilon
 
 Struct -> struct id { Statement }
-Statement -> Defination | Defination Statement
+Statement -> Defination ; | Defination ; Statement
 
-Defination -> Variable ;
-Variable -> Data id | Data Array id
-Data -> Type | id
-Type -> int | float | bool
-Array -> [ const ] Array
+Function -> Data id ( Parameter ) { Process }
+Parameter -> epsilon | Defination | Defination , Parameter
+Process -> Module Return
+Return -> return id Index ; | epsilon
 
-Assignment -> id = Value ; | id Index = Value ;
+Assignment -> id Index = Value
 Value -> Value + Value | Value - Value | Value * Value | Value / Value | Call
 Value -> - Value
 Value -> ( Value )
-Value -> const | id | id Index
-Index -> [ Value ] Index
+Value -> const | id Index
+Index -> [ Value ] Index | epsilon
 
 Control -> If | If Else | While
-If -> if ( Condition ) { Program }
-Else -> else { Program }
-While -> while ( Condition ) { Program }
+If -> if ( Condition ) { Module }
+Else -> else { Module }
+While -> while ( Condition ) { Module }
 Condition -> Condition and Condition | Condition or Condition | not Condition | ( Condition ) | Value Relop Value | 1 | 0
 Relop -> < | <= | == | != | > | >=
 
-Function -> Data id ( Parameter ) { Process } | Data id ( ) { Process }
-Parameter -> Variable | Variable , Parameter
-Process -> Program | Program Return
-Return -> return id Index ; | return id ;
-
 Call -> id ( Transmit )
-Transmit -> id | id , Transmit | id Index | id Index , Transmit
-
-end
-
-S -> L = R
-S -> R
-L -> * R
-L -> id
-R -> L
+Transmit -> epsilon | Value | Value , Transmit
 
 end
 
 以空格分隔字符
 非终结符以大写开头
+end标识语法结尾
 
-函数必须有参数
 一行只能定义一个变量
-不能为空函数
-不能用函数返回值进行初始化
 定义时不能进行初始化
 数组长度只能用常量初始化
 布尔真假用1和0表示

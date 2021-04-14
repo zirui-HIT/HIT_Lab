@@ -140,10 +140,13 @@ def analyse(words: List[Word], action: Dict[int, Dict[str, str]],
 def DFS(tree: List[Dict], current: int, depth: int, f):
     '''遍历输出语法树
     '''
+    if (tree[current]['word'].kind())[0].isupper() and len(tree[current]['child']) == 0:
+        return
+
     sentence = '\t' * depth + tree[current]['word'].kind()
     if tree[current]['word'].word() != '_':
         sentence = sentence + ' : ' + tree[current]['word'].word()
-    sentence = sentence + '(' + str(tree[current]['word'].line()) + ')'
+    sentence = sentence + ' (' + str(tree[current]['word'].line()) + ')'
     f.write(sentence + '\n')
 
     for c in tree[current]['child']:

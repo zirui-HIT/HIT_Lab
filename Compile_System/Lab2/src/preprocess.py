@@ -223,8 +223,14 @@ def get_closure(items: List[Item], grammar: Dict[str, List[List[str]]], first: D
                     current_first = get_sentence_first(
                         first, current_sentence + [current_character])
                     for b in current_first:
-                        current_item = Item(
-                            current_grammar[p+1], ['@']+g, b)
+                        if b == 'epsilon':
+                            continue
+
+                        if 'epsilon' in g:
+                            current_item = Item(current_grammar[p+1], ['@'], b)
+                        else:
+                            current_item = Item(
+                                current_grammar[p+1], ['@']+g, b)
 
                         if not (current_item in closure):
                             flag = True
@@ -398,7 +404,7 @@ if __name__ == '__main__':
     grammar = load_grammar('Compile_System/Lab2/data/CFG.txt')
 
     print('getting items')
-    items = get_items(grammar, 'Program')
+    items = get_items(grammar, 'Module')
 
     # TODO 仅用于验证
     '''
@@ -408,7 +414,7 @@ if __name__ == '__main__':
     '''
 
     print('getting action and goto table')
-    action, goto = get_action_and_goto(items, grammar, 'Program')
+    action, goto = get_action_and_goto(items, grammar, 'Module')
 
     print('dumping result')
     dump(action, 'Compile_System/Lab2/data/table/action.txt')
