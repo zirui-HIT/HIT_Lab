@@ -1,0 +1,70 @@
+Module -> epsilon | 
+          {Defination.next = newlabel();} Defination ; Module | {label(Defination.next);} 
+          {Assignment.next = newlabel();} Assignment ; Module | {label(Assignment.next);}
+          {Control.next = newlabel();} Control Module | {label(Control.next);}
+          Function Module | 
+          Struct Module | 
+          Call ; Module
+
+Defination -> Data id {enter(id.lexeme, Data.type); Defination.type = Data.type;}
+Data -> Type | {Data.type = Type.type;}
+        Data [ const ] {Data.type = array(const, Data.type);}
+Type -> int | {Type.type = 'int';}
+        float | {Type.type = 'float';}
+        bool | {Type.type = 'bool';}
+        id {Type.type = id.type;}
+
+Struct -> struct id { Statement }
+Statement -> Defination ; | Defination ; Statement
+
+Function -> Data id ( Parameter ) { Process }
+Parameter -> epsilon | Defination | Defination , Parameter
+Process -> Module Return
+Return -> return id Index ; | epsilon
+
+Assignment -> id Index = Value {Assignment.code = gen(id + Index.index '=' Value.addr);}
+Value -> Value + Value | {Value.addr = newtemp(); Value.code = gen(Value.addr '=' Value.addr '+' Value.addr;)}
+         Value - Value | {Value.addr = newtemp(); Value.code = gen(Value.addr '=' Value.addr '-' Value.addr;)}
+         Value * Value | {Value.addr = newtemp(); Value.code = gen(Value.addr '=' Value.addr '*' Value.addr;)}
+         Value / Value | {Value.addr = newtemp(); Value.code = gen(Value.addr '=' Value.addr '/' Value.addr;)}
+         Call
+Value -> - Value {Value.addr = newtemp(); Value.code = gen(Value.addr '=' 'minus' Value.addr;)}
+Value -> ( Value ) {Value.addr = Value.addr; Value.code = Value.code;}
+Value -> const | {Value.addr = newtemp(); Value.code = gen(Value.addr '=' const)}
+         id Index {Value.addr = id.lexeme + Index.index; E.code = '';} 
+Index -> [ Value ] Index | {Index.index = '[Value]' + Index.index;}
+         epsilon
+
+Control -> {If.next = Control.next;} If | 
+           {IfElse.next = Condtrol.next;} IfElse | 
+           {While.next = Control.next;} While
+If -> if {Condition.true = newlabel(); Condition.false = If.next;} ( Condition ) { {label(Condition.True); Module.next = If.next;} Module }
+IfElse -> if {Condition.true = newlabel(); Condition.false = newlabel();} ( Condition ) { {label(Condition.True); Module.next = IfElse.next;} Module {gen('goto' IfElse.next)}} else {{label(Condition.false); Module.next = IfElse.next} Module }
+While -> while {While.begin = newlabel(); label(While.begin); Condition.true = newlabel(); Condition.false = While.next;} ( Condition ) { {label(Condition.true); Module.next = While.begin;} Module {gen('goto' While.begin)}}
+Condition -> {Condition.true = newlabel(); Condition.false = Condition.false;} Condition and {label(Condition.true); Condition.true = Condition.true; Condition.false = Condition.false;} Condition | 
+             {Condition.true = Condition.true; Condition.false = newlabel();} Condition or {label(Condition.false); Condition.true = Condition.true; Condition.false = Condition.false;} Condition | 
+             not {Condition.true = Condition.false; Condition.false = Condition.true;} Condition |
+             ( {Condition.true = Condition.true; Condition.false = Condition.false;} Condition ) | 
+             Value Relop Value | {gen('if' Value.addr relop.value Value.addr 'goto' Condition.True); gen('goto' Condition.false);}
+             1 | {gen('goto' Condition.true);}
+             0 {gen('goto' Condition.false);}
+Relop -> < {Relop.value = '<'} | 
+         <= {Relop.value = '<='} | 
+         == {Relop.value = '=='} | 
+         != {Relop.value = '!='} | 
+         > {Relop.value = '>'} | 
+         >= {Relop.value = '>='}
+
+Call -> id ( Transmit )
+Transmit -> epsilon | Value | Value , Transmit
+
+end
+
+以空格分隔字符
+非终结符以大写开头
+end标识语法结尾
+
+一行只能定义一个变量
+定义时不能进行初始化
+数组长度只能用常量初始化
+布尔真假用1和0表示
