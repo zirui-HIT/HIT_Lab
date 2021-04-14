@@ -36,7 +36,7 @@ class Ui_AddStudentWidget(object):
         self.college_box.setObjectName("college_box")
 
         database = sqlite3.connect('Database_System/Lab1/data/data.db')
-        colleges = database.execute('SELECT name, id FROM COLLEGE ORDER BY id')
+        colleges = database.execute('SELECT NAME, ID FROM COLLEGE ORDER BY id')
         colleges = [row[0] + ' ' + str(row[1]) for row in colleges]
         self.college_box.addItems(colleges)
 

@@ -36,7 +36,7 @@ class Ui_AddCourseWidget(object):
         self.teacher_box = QtWidgets.QComboBox(AddCourseWidget)
         self.teacher_box.setGeometry(QtCore.QRect(400, 230, 240, 40))
         self.teacher_box.setObjectName("teacher_box")
-        teachers = database.execute('SELECT name, id FROM TEACHER ORDER BY id')
+        teachers = database.execute('SELECT NAME, ID FROM TEACHER ORDER BY ID')
         teachers = [row[0] + ' ' + str(row[1]) for row in teachers]
         self.teacher_box.addItems(teachers)
 
@@ -89,7 +89,7 @@ class Ui_AddCourseWidget(object):
         college_id = int((self.college_box.currentText().split())[1])
 
         command = 'INSERT INTO COURSE VALUES (%d, \'%s\', %d, %d)' % (
-            course_id, course_name, teacher_id, college_id)
+            course_id, course_name, college_id, teacher_id)
         database.execute(command)
 
         QtWidgets.QMessageBox.information(self.widget, '提示', '添加成功')

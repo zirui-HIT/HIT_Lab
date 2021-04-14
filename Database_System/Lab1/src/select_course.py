@@ -68,6 +68,7 @@ class Ui_SelectCourseWidget(object):
         students = list(students)
         if len(students) == 0:
             QtWidgets.QMessageBox.warning(self.widget, '警告', '该学号不存在')
+            return
         college_id = students[0][0]
 
         courses = database.execute(
