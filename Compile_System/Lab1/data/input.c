@@ -5,10 +5,14 @@ int sum(float a, int b){
 }
 
 int main(){
-    float a = 1.6e3;
-    int b = 00xA5;
-    float c = 10.0;
-    int d = 056;
+    float a;
+    a = 1.6e3;
+    int b;
+    b = 00xA5;
+    float c;
+    c = 10.0;
+    int d;
+    d = 056;
     int float = 89;
 
     int sum1;

@@ -395,10 +395,10 @@ def dump(table: Dict[int, Dict[str, str]], path: str):
 
 if __name__ == '__main__':
     print('loading grammar')
-    grammar = load_grammar('Lab2/data/CFG.txt')
+    grammar = load_grammar('Compile_System/Lab2/data/CFG.txt')
 
     print('getting items')
-    items = get_items(grammar, 'P')
+    items = get_items(grammar, 'Program')
 
     # TODO 仅用于验证
     '''
@@ -408,8 +408,8 @@ if __name__ == '__main__':
     '''
 
     print('getting action and goto table')
-    action, goto = get_action_and_goto(items, grammar, 'P')
+    action, goto = get_action_and_goto(items, grammar, 'Program')
 
     print('dumping result')
-    dump(action, 'Lab2/data/table/action.txt')
-    dump(goto, 'Lab2/data/table/goto.txt')
+    dump(action, 'Compile_System/Lab2/data/table/action.txt')
+    dump(goto, 'Compile_System/Lab2/data/table/goto.txt')
