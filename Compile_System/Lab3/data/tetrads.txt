@@ -8,15 +8,30 @@ L6: (=, 10.0, -, t4) 	 t4 = 10.0
 L7: (=, t4, -, c) 	 c = t4
 L8: (=, 056, -, t5) 	 t5 = 056
 L9: (=, t5, -, d) 	 d = t5
-L10: (call, sum, -, t6) 	 t6 = call sum
-L11: (=, t6, -, sum1) 	 sum1 = t6
-L12: (call, sum, -, t7) 	 t7 = call sum
-L13: (=, t7, -, sum2) 	 sum2 = t7
-L14: (-, sum1, sum2, t8) 	 t8 = sum1 - sum2
-L15: (=, t8, -, sum3) 	 sum3 = t8
-L16: (-, sum2, sum1, t9) 	 t9 = sum2 - sum1
-L17: (=, t9, -, sum3) 	 sum3 = t9
-L18: (=, 0, -, t10) 	 t10 = 0
-L19: (=, 1, -, t11) 	 t11 = 1
-L20: (-, sum3, t11, t12) 	 t12 = sum3 - t11
-L21: (=, t12, -, sum3) 	 sum3 = t12
+L10: (param, -, -, b) 	 param b
+L11: (param, -, -, a) 	 param a
+L12: (call, -, -, sum,2) 	 call sum,2
+L13: (=, ret, -, t6) 	 t6 = ret
+L14: (=, t6, -, sum1) 	 sum1 = t6
+L15: (param, -, -, d) 	 param d
+L16: (param, -, -, c) 	 param c
+L17: (call, -, -, sum,2) 	 call sum,2
+L18: (=, ret, -, t7) 	 t7 = ret
+L19: (=, t7, -, sum2) 	 sum2 = t7
+L20: (j<, sum1, sum2, 22) 	 if sum1<sum2 goto L22
+L21: (j, -, -, 25) 	 goto L25
+L22: (-, sum1, sum2, t8) 	 t8 = sum1 - sum2
+L23: (=, t8, -, sum3) 	 sum3 = t8
+L24: (j, -, -, 27) 	 goto L27
+L25: (-, sum2, sum1, t9) 	 t9 = sum2 - sum1
+L26: (=, t9, -, sum3) 	 sum3 = t9
+L27: (=, 0, -, t10) 	 t10 = 0
+L28: (j>, sum3, t10, 30) 	 if sum3>t10 goto L30
+L29: (j, -, -, 36) 	 goto L36
+L30: (param, -, -, sum3) 	 param sum3
+L31: (call, -, -, printf,1) 	 call printf,1
+L32: (=, 1, -, t11) 	 t11 = 1
+L33: (-, sum3, t11, t12) 	 t12 = sum3 - t11
+L34: (=, t12, -, sum3) 	 sum3 = t12
+L35: (j, -, -, 27) 	 goto L27
+L36:
