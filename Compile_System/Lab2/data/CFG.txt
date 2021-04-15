@@ -1,9 +1,8 @@
 Module -> epsilon | Defination ; Module | Assignment ; Module | Control Module | Function Module | Struct Module | Call ; Module
 
 Defination -> Data id
-Data -> Type Array
+Data -> Type | Data [ const ]
 Type -> int | float | bool | id
-Array -> [ const ] Array | epsilon
 
 Struct -> struct id { Statement }
 Statement -> Defination ; | Defination ; Statement
@@ -20,9 +19,9 @@ Value -> ( Value )
 Value -> const | id Index
 Index -> [ Value ] Index | epsilon
 
-Control -> If | If Else | While
+Control -> If | IfElse | While
 If -> if ( Condition ) { Module }
-Else -> else { Module }
+IfElse -> if ( Condition ) { Module } else { Module }
 While -> while ( Condition ) { Module }
 Condition -> Condition and Condition | Condition or Condition | not Condition | ( Condition ) | Value Relop Value | 1 | 0
 Relop -> < | <= | == | != | > | >=
