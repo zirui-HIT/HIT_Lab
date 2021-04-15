@@ -174,6 +174,7 @@ def analyzer(code: List[str]):
                         token.append('&& <and, _> ' + str(i))
                     elif code[i][j] == '|':
                         token.append('|| <or, _> ' + str(i))
+                    j += 1
                 else:
                     token.append(code[i][j] + ' <' + code[i]
                                  [j] + ', _> ' + str(i))

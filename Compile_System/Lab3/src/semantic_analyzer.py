@@ -185,7 +185,7 @@ def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
                 tetrads[x].update_result(len(tetrads))
 
             analyze(current_child[1], symbols, tetrads)
-            node.update('next_list', current_child[1])
+            node.update('next_list', current_child[1].attribute('next_list'))
 
             return
     elif node.word() == 'If':
