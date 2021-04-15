@@ -6,7 +6,7 @@ Module -> epsilon |
           Struct Module | 
           Call ; Module
 
-Defination -> Data id {enter(id.lexeme, Data.type); Defination.type = Data.type;}
+Defination -> Data id {enter(id.lexeme, Data.type);}
 Data -> Type | {Data.type = Type.type;}
         Data [ const ] {Data.type = array(const, Data.type);}
 Type -> int | {Type.type = 'int';}

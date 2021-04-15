@@ -1,0 +1,22 @@
+L0: (+, a, b, t1) 	 t1 = a + b
+L1: (=, t1, -, ret) 	 ret = t1
+L2: (=, 1.6e3, -, t2) 	 t2 = 1.6e3
+L3: (=, t2, -, a) 	 a = t2
+L4: (=, 0xA5, -, t3) 	 t3 = 0xA5
+L5: (=, t3, -, b) 	 b = t3
+L6: (=, 10.0, -, t4) 	 t4 = 10.0
+L7: (=, t4, -, c) 	 c = t4
+L8: (=, 056, -, t5) 	 t5 = 056
+L9: (=, t5, -, d) 	 d = t5
+L10: (call, sum, -, t6) 	 t6 = call sum
+L11: (=, t6, -, sum1) 	 sum1 = t6
+L12: (call, sum, -, t7) 	 t7 = call sum
+L13: (=, t7, -, sum2) 	 sum2 = t7
+L14: (-, sum1, sum2, t8) 	 t8 = sum1 - sum2
+L15: (=, t8, -, sum3) 	 sum3 = t8
+L16: (-, sum2, sum1, t9) 	 t9 = sum2 - sum1
+L17: (=, t9, -, sum3) 	 sum3 = t9
+L18: (=, 0, -, t10) 	 t10 = 0
+L19: (=, 1, -, t11) 	 t11 = 1
+L20: (-, sum3, t11, t12) 	 t12 = sum3 - t11
+L21: (=, t12, -, sum3) 	 sum3 = t12

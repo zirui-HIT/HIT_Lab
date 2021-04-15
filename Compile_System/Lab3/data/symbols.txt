@@ -1,0 +1,8 @@
+a float
+b int
+ret float
+c float
+d int
+sum1 int
+sum2 int
+sum3 int
