@@ -17,8 +17,8 @@ namespace badgerdb {
 
 int BufHashTbl::hash(const File* file, const PageId pageNo)
 {
-  int tmp, value;
-  tmp = (long)file;  // cast of pointer to the file object to an integer
+  long long tmp, value;
+  tmp = (long long)file;  // cast of pointer to the file object to an integer
   value = (tmp + pageNo) % HTSIZE;
   return value;
 }

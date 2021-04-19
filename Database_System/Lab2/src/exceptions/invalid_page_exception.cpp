@@ -9,6 +9,7 @@
 
 #include <sstream>
 #include <string>
+#include "types.h"
 
 namespace badgerdb {
 
