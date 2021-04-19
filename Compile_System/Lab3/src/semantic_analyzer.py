@@ -34,20 +34,36 @@ class Tetrad(object):
         self.__value2 = value2
         self.__result = result
 
+    def update_result(self, result: str):
+        self.__result = result
+
     def __str__(self):
-        return '(%s, %s, %s, %s)' % (self.__op, self.__value1, self.__value2, self.__result)
+        if self.__op is None:
+            return ''
+        return '(%s, %s, %s, %s)' % (self.__op, self.__value1, self.__value2,
+                                     self.__result)
 
     def operate(self):
-        if self.__op == 'j<':
-            return 'if %s<%s goto L%s' % (self.__value1, self.__value2, self.__result)
-        if self.__op == 'j':
-            return 'goto L%s' % (self.__result)
+        if self.__op is None:
+            return ''
+
+        if self.__op[0] == 'j':
+            if len(self.__op) > 1:
+                return 'if %s%s%s goto L%s' % (self.__value1, self.__op[1:],
+                                               self.__value2, self.__result)
+            else:
+                return 'goto L%s' % (self.__result)
+
         if self.__op in ['+', '-', '*', '/']:
-            return '%s = %s %s %s' % (self.__result, self.__value1, self.__op, self.__value2)
+            return '%s = %s %s %s' % (self.__result, self.__value1, self.__op,
+                                      self.__value2)
         if self.__op == '=':
             return '%s = %s' % (self.__result, self.__value1)
+
         if self.__op == 'call':
-            return '%s = call %s' % (self.__result, self.__value1)
+            return 'call %s' % (self.__result)
+        if self.__op == 'param':
+            return 'param %s' % (self.__result)
 
 
 def build_tree(path: str) -> Node:
@@ -80,6 +96,9 @@ def build_tree(path: str) -> Node:
             while depth != stack[-1].depth() + 1:
                 stack.pop()
 
+            if stack[-1].word() == 'Relop':
+                current.update('sign', words[0])
+
             stack[-1].append(current)
             stack.append(current)
 
@@ -109,10 +128,14 @@ def _newtemp():
     return 't%d' % (TEMP_VARIABLE_CNT)
 
 
-def _gen(op: str, value1: str, value2: str, result: str, tetrads: List[Tetrad]):
+def _gen(op: str, value1: str, value2: str, result: str,
+         tetrads: List[Tetrad]):
     '''生成四元组并保存
     '''
     tetrads.append(Tetrad(op, value1, value2, result))
+
+
+PARAMETER_QUEUE = []
 
 
 def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
@@ -125,58 +148,197 @@ def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
     '''
     current_child = node.child()
 
+    # 处理布尔表达式语句
+    if node.word() == 'Condition':
+        if current_child[1].word() == 'and':
+            analyze(current_child[0], symbols, tetrads)
+            for i in current_child[0].attribute('true_list'):
+                tetrads[i].update_result(len(tetrads))
+
+            analyze(current_child[2], symbols, tetrads)
+            node.update('true_list', current_child[2].attribute('true_list'))
+            node.update(
+                'false_list', current_child[0].attribute('false_list') +
+                current_child[2].attribute('false_list'))
+
+            return
+        elif current_child[1].word() == 'or':
+            analyze(current_child[0], symbols, tetrads)
+            for i in current_child[0].attribute('false_list'):
+                tetrads[i].update_result(len(tetrads))
+
+            analyze(current_child[2], symbols, tetrads)
+            node.update(
+                'true_list', current_child[0].attribute('true_list') +
+                current_child[2].attribute('true_list'))
+            node.update('false_list', current_child[2].attribute('false_list'))
+
+            return
+
+    # 处理控制流语句
+    if node.word() == 'Module':
+        if len(current_child) == 0:
+            node.update('next_list', [])
+        elif current_child[0].word() == 'Control':
+            analyze(current_child[0], symbols, tetrads)
+            for x in current_child[0].attribute('next_list'):
+                tetrads[x].update_result(len(tetrads))
+
+            analyze(current_child[1], symbols, tetrads)
+            node.update('next_list', current_child[1].attribute('next_list'))
+
+            return
+    elif node.word() == 'If':
+        analyze(current_child[2], symbols, tetrads)
+        for i in current_child[2].attribute('true_list'):
+            tetrads[i].update_result(len(tetrads))
+
+        node.update(
+            'next_list', current_child[2].attribute('false_list') +
+            current_child[5].attribute('next_list'))
+
+        return
+    elif node.word() == 'IfElse':
+        analyze(current_child[2], symbols, tetrads)
+        for i in current_child[2].attribute('true_list'):
+            tetrads[i].update_result(len(tetrads))
+
+        analyze(current_child[5], symbols, tetrads)
+        temp_next_list = [len(tetrads)]
+        _gen('j', '-', '-', '_', tetrads)
+
+        for i in current_child[2].attribute('false_list'):
+            tetrads[i].update_result(len(tetrads))
+
+        analyze(current_child[9], symbols, tetrads)
+        node.update(
+            'next_list',
+            temp_next_list + current_child[5].attribute('next_list') +
+            current_child[9].attribute('next_list'))
+
+        return
+    elif node.word() == 'While':
+        temp_quad = len(tetrads)
+
+        analyze(current_child[2], symbols, tetrads)
+        for i in current_child[2].attribute('true_list'):
+            tetrads[i].update_result(len(tetrads))
+        node.update('next_list', current_child[2].attribute('false_list'))
+
+        analyze(current_child[5], symbols, tetrads)
+        for i in current_child[5].attribute('next_list'):
+            tetrads[i].update_result(temp_quad)
+
+        _gen('j', '-', '-', temp_quad, tetrads)
+        return
+
+    # 递归调用
     for c in current_child:
         analyze(c, symbols, tetrads)
 
     # 处理声明语句
     if node.word() == 'Defination':
-        _enter(current_child[1].attribute(
-            'lexeme'), current_child[0].attribute('type'), symbols)
+        _enter(current_child[1].attribute('lexeme'),
+               current_child[0].attribute('type'), symbols)
     elif node.word() == 'Data':
         if current_child[0].word() == 'Type':
             node.update('type', current_child[0].attribute('type'))
         elif current_child[0].word() == 'Data':
-            node.update('type', _array(current_child[2].attribute(
-                'value'), current_child[0].attribute('type')))
+            node.update(
+                'type',
+                _array(current_child[2].attribute('value'),
+                       current_child[0].attribute('type')))
     elif node.word() == 'Type':
         node.update('type', current_child[0].attribute('type'))
 
     # 处理赋值语句
     if node.word() == 'Assignment':
-        _gen('=', current_child[3].attribute(
-            'addr'), '-', current_child[0].attribute('lexeme') + current_child[1].attribute('index'), tetrads)
+        _gen(
+            '=', current_child[3].attribute('addr'), '-',
+            current_child[0].attribute('lexeme') +
+            current_child[1].attribute('index'), tetrads)
     elif node.word() == 'Value':
         if current_child[0].word() == 'Value':
             node.update('addr', _newtemp())
-            _gen(current_child[1].attribute('op'), current_child[0].attribute(
-                'addr'), current_child[2].attribute('addr'), node.attribute('addr'), tetrads)
+            _gen(current_child[1].attribute('op'),
+                 current_child[0].attribute('addr'),
+                 current_child[2].attribute('addr'), node.attribute('addr'),
+                 tetrads)
         elif current_child[0].word() == '-':
             node.update('addr', _newtemp())
-            _gen(
-                '*', -1, current_child[1].attribute('addr'), node.attribute('addr'), tetrads)
+            _gen('*', -1, current_child[1].attribute('addr'),
+                 node.attribute('addr'), tetrads)
         elif current_child[0].word() == '(':
             node.update('addr', current_child[1].attribute('addr'))
         elif current_child[0].word() == 'const':
             node.update('addr', _newtemp())
-            _gen('=', current_child[0].attribute('value'),
-                 '-', node.attribute('addr'), tetrads)
+            _gen('=', current_child[0].attribute('value'), '-',
+                 node.attribute('addr'), tetrads)
         elif current_child[0].word() == 'id':
-            node.update('addr', current_child[0].attribute(
-                'lexeme') + current_child[1].attribute('index'))
+            node.update(
+                'addr', current_child[0].attribute('lexeme') +
+                current_child[1].attribute('index'))
         elif current_child[0].word() == 'Call':
             node.update('addr', _newtemp())
-            _gen('call', current_child[0].attribute(
-                'lexeme'), '-', node.attribute('addr'), tetrads)
+            _gen('=', 'ret', '-', node.attribute('addr'), tetrads)
     elif node.word() == 'Index':
         if len(current_child) == 0:
             node.update('index', '')
         else:
-            node.update('index', '[%s]%s' % (current_child[1].attribute(
-                'value'), current_child[3].attribute('index')))
+            node.update(
+                'index', '[%s]%s' % (current_child[1].attribute('value'),
+                                     current_child[3].attribute('index')))
+
+    # 处理控制流语句
+    if node.word() == 'Module':
+        if len(current_child) == 0:
+            node.update('next_list', [])
+        elif current_child[0] != 'Control':
+            node.update('next_list', [])
+    elif node.word() == 'Control':
+        node.update('next_list', current_child[0].attribute('next_list'))
+
+    # 处理布尔表达式语句
+    if node.word() == 'Condition':
+        if current_child[1].word() == 'Relop':
+            node.update('true_list', [len(tetrads)])
+            node.update('false_list', [len(tetrads) + 1])
+            _gen('j%s' % (current_child[1].attribute('sign')),
+                 current_child[0].attribute('addr'),
+                 current_child[2].attribute('addr'), '_', tetrads)
+            _gen('j', '-', '-', '_', tetrads)
+        elif current_child[0].word() == 'true':
+            node.update('true_list', [len(tetrads)])
+            _gen('j', '-', '-', '_', tetrads)
+        elif current_child[0].word() == 'false':
+            node.update('false_list', [len(tetrads)])
+            _gen('j', '-', '-', '_', tetrads)
+        elif current_child[0].word() == '(':
+            node.update('true_list', current_child[1].attribute('true_list'))
+            node.update('false_list', current_child[1].attribute('false_list'))
+        elif current_child[0].word() == 'not':
+            node.update('true_list', current_child[1].attribute('false_list'))
+            node.update('false_list', current_child[1].attribute('true_list'))
+    elif node.word() == 'Relop':
+        node.update('sign', current_child[0].attribute('sign'))
 
     # 处理过程调用语句
+    global PARAMETER_QUEUE
     if node.word() == 'Call':
-        node.update('lexeme', current_child[0].attribute('lexeme'))
+        cnt = 0
+        for t in PARAMETER_QUEUE:
+            _gen('param', '-', '-', t, tetrads)
+            cnt += 1
+        _gen('call', '-', '-',
+             '%s,%s' % (current_child[0].attribute('lexeme'), cnt), tetrads)
+        node.update('addr', current_child[0].attribute('lexeme'))
+    elif node.word() == 'Transmit':
+        if len(current_child) == 0:
+            PARAMETER_QUEUE = []
+        elif current_child[-1].word() == 'Transmit':
+            PARAMETER_QUEUE.append(current_child[0].attribute('addr'))
+        elif current_child[0].word() == 'Value':
+            PARAMETER_QUEUE = [current_child[0].attribute('addr')]
 
 
 if __name__ == '__main__':
@@ -193,3 +355,4 @@ if __name__ == '__main__':
         for i in range(len(tetrads)):
             f.write('L%d: %s \t %s\n' %
                     (i, tetrads[i].__str__(), tetrads[i].operate()))
+        f.write('L%d:\n' % (len(tetrads)))

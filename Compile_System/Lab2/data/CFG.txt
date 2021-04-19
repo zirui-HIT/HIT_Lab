@@ -23,7 +23,7 @@ Control -> If | IfElse | While
 If -> if ( Condition ) { Module }
 IfElse -> if ( Condition ) { Module } else { Module }
 While -> while ( Condition ) { Module }
-Condition -> Condition and Condition | Condition or Condition | not Condition | ( Condition ) | Value Relop Value | 1 | 0
+Condition -> Condition and Condition | Condition or Condition | not Condition | ( Condition ) | Value Relop Value | true | false
 Relop -> < | <= | == | != | > | >=
 
 Call -> id ( Transmit )

@@ -12,6 +12,8 @@ RESERVED_WORD['do'] = 8
 RESERVED_WORD['while'] = 9
 RESERVED_WORD['return'] = 10
 RESERVED_WORD['void'] = 11
+RESERVED_WORD['true'] = 39
+RESERVED_WORD['false'] = 40
 
 
 def isreserved(s: str) -> int:
@@ -172,6 +174,7 @@ def analyzer(code: List[str]):
                         token.append('&& <and, _> ' + str(i))
                     elif code[i][j] == '|':
                         token.append('|| <or, _> ' + str(i))
+                    j += 1
                 else:
                     token.append(code[i][j] + ' <' + code[i]
                                  [j] + ', _> ' + str(i))
