@@ -41,7 +41,7 @@ void testBufMgr();
 int main() {
     //Following code shows how to you File and Page classes
 
-    const std::string& filename = "test.db";
+    const std::string& filename = "../data/test.db";
     // Clean up from any previous runs that crashed.
     try {
         File::remove(filename);
@@ -102,11 +102,11 @@ void testBufMgr() {
     bufMgr = new BufMgr(num);
 
     // create dummy files
-    const std::string& filename1 = "test.1";
-    const std::string& filename2 = "test.2";
-    const std::string& filename3 = "test.3";
-    const std::string& filename4 = "test.4";
-    const std::string& filename5 = "test.5";
+    const std::string& filename1 = "../data/test.1";
+    const std::string& filename2 = "../data/test.2";
+    const std::string& filename3 = "../data/test.3";
+    const std::string& filename4 = "../data/test.4";
+    const std::string& filename5 = "../data/test.5";
 
     try {
         File::remove(filename1);
