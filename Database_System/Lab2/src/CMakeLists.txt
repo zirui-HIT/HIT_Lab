@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(badgerDB VERSION 0.1.0)
 
+SET(CMAKE_BUILD_TYPE "Debug")
 set(EXECUTABLE_OUTPUT_PATH ../)
 
 aux_source_directory(. SRC_LIST)
