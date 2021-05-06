@@ -1,8 +1,9 @@
 Module -> epsilon | Defination ; Module | Assignment ; Module | Control Module | Function Module | Struct Module | Call ; Module
 
-Defination -> Data id
+Defination -> Data Point id
 Data -> Type | Data [ const ]
 Type -> int | float | bool | id
+Point -> epsilon | *
 
 Struct -> struct id { Statement }
 Statement -> Defination ; | Defination ; Statement

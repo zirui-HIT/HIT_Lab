@@ -9,9 +9,9 @@ int main(){
     a = 1.6e3;
     int b;
     b = 00xA5;
-    float c;
+    float * c;
     c = 10.0;
-    int d;
+    int[100] d;
     d = 056;
     int float = 89;
 
