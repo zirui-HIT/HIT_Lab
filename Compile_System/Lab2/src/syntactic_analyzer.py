@@ -107,7 +107,7 @@ def analyse(words: List[Word], action: Dict[int, Dict[str, str]],
             current_node = {
                 'word':
                 Word('_', current_action[0],
-                     ret[stack[-1]['id']]['word'].line()),
+                     ret[stack[-current_grammar_length]['id']]['word'].line()),
                 'child': [],
                 'id':
                 len(ret)

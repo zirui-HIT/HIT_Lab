@@ -11,8 +11,9 @@ int main(){
     b = 00xA5;
     float * c;
     c = 10.0;
-    int[100] d;
-    d = 056;
+    int[100][100] d;
+    d[36][27] = 056;
+    b = d[36][27];
     int float = 89;
 
     int sum1;
