@@ -1,8 +1,8 @@
 a float
 b int
 ret float
-c float
-d int
+c float*
+d int[100][100]
 sum1 int
 sum2 int
 sum3 int

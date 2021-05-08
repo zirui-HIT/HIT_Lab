@@ -6,32 +6,35 @@ L4: (=, 0xA5, -, t3) 	 t3 = 0xA5
 L5: (=, t3, -, b) 	 b = t3
 L6: (=, 10.0, -, t4) 	 t4 = 10.0
 L7: (=, t4, -, c) 	 c = t4
-L8: (=, 056, -, t5) 	 t5 = 056
-L9: (=, t5, -, d) 	 d = t5
-L10: (param, -, -, b) 	 param b
-L11: (param, -, -, a) 	 param a
-L12: (call, -, -, sum,2) 	 call sum,2
-L13: (=, ret, -, t6) 	 t6 = ret
-L14: (=, t6, -, sum1) 	 sum1 = t6
-L15: (param, -, -, d) 	 param d
-L16: (param, -, -, c) 	 param c
-L17: (call, -, -, sum,2) 	 call sum,2
-L18: (=, ret, -, t7) 	 t7 = ret
-L19: (=, t7, -, sum2) 	 sum2 = t7
-L20: (j<, sum1, sum2, 22) 	 if sum1<sum2 goto L22
-L21: (j, -, -, 25) 	 goto L25
-L22: (-, sum1, sum2, t8) 	 t8 = sum1 - sum2
-L23: (=, t8, -, sum3) 	 sum3 = t8
-L24: (j, -, -, 27) 	 goto L27
-L25: (-, sum2, sum1, t9) 	 t9 = sum2 - sum1
-L26: (=, t9, -, sum3) 	 sum3 = t9
-L27: (=, 0, -, t10) 	 t10 = 0
-L28: (j>, sum3, t10, 30) 	 if sum3>t10 goto L30
-L29: (j, -, -, 36) 	 goto L36
-L30: (param, -, -, sum3) 	 param sum3
-L31: (call, -, -, printf,1) 	 call printf,1
-L32: (=, 1, -, t11) 	 t11 = 1
-L33: (-, sum3, t11, t12) 	 t12 = sum3 - t11
-L34: (=, t12, -, sum3) 	 sum3 = t12
-L35: (j, -, -, 27) 	 goto L27
-L36:
+L8: (=, 36, -, t5) 	 t5 = 36
+L9: (=, 056, -, t6) 	 t6 = 056
+L10: (=, t6, -, d[t5]) 	 d[t5] = t6
+L11: (=, 36, -, t7) 	 t7 = 36
+L12: (=, d[t7], -, b) 	 b = d[t7]
+L13: (param, -, -, b) 	 param b
+L14: (param, -, -, a) 	 param a
+L15: (call, -, -, sum,2) 	 call sum,2
+L16: (=, ret, -, t8) 	 t8 = ret
+L17: (=, t8, -, sum1) 	 sum1 = t8
+L18: (param, -, -, d) 	 param d
+L19: (param, -, -, c) 	 param c
+L20: (call, -, -, sum,2) 	 call sum,2
+L21: (=, ret, -, t9) 	 t9 = ret
+L22: (=, t9, -, sum2) 	 sum2 = t9
+L23: (j<, sum1, sum2, 25) 	 if sum1<sum2 goto L25
+L24: (j, -, -, 28) 	 goto L28
+L25: (-, sum1, sum2, t10) 	 t10 = sum1 - sum2
+L26: (=, t10, -, sum3) 	 sum3 = t10
+L27: (j, -, -, 30) 	 goto L30
+L28: (-, sum2, sum1, t11) 	 t11 = sum2 - sum1
+L29: (=, t11, -, sum3) 	 sum3 = t11
+L30: (=, 0, -, t12) 	 t12 = 0
+L31: (j>, sum3, t12, 33) 	 if sum3>t12 goto L33
+L32: (j, -, -, 39) 	 goto L39
+L33: (param, -, -, sum3) 	 param sum3
+L34: (call, -, -, printf,1) 	 call printf,1
+L35: (=, 1, -, t13) 	 t13 = 1
+L36: (-, sum3, t13, t14) 	 t14 = sum3 - t13
+L37: (=, t14, -, sum3) 	 sum3 = t14
+L38: (j, -, -, 30) 	 goto L30
+L39:

@@ -242,7 +242,7 @@ def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
                current_child[0].attribute('type'), symbols)
     elif node.word() == 'Data':
         if current_child[0].word() == 'Type':
-            node.update('type', current_child[0].attribute('type'))
+            node.update('type', current_child[0].attribute('type') + current_child[1].attribute('point') * '*')
         elif current_child[0].word() == 'Data':
             node.update(
                 'type',
@@ -250,6 +250,11 @@ def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
                        current_child[0].attribute('type')))
     elif node.word() == 'Type':
         node.update('type', current_child[0].attribute('type'))
+    elif node.word() == 'Point':
+        if len(current_child) == 0:
+            node.update('point', 0)
+        else:
+            node.update('point', current_child[1].attribute('point') + 1)
 
     # 处理赋值语句
     if node.word() == 'Assignment':
@@ -286,7 +291,7 @@ def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
             node.update('index', '')
         else:
             node.update(
-                'index', '[%s]%s' % (current_child[1].attribute('value'),
+                'index', '[%s]%s' % (current_child[1].attribute('addr'),
                                      current_child[3].attribute('index')))
 
     # 处理控制流语句
