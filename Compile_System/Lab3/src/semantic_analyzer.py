@@ -1,3 +1,4 @@
+from sys import exit
 from typing import Dict, List
 
 
@@ -21,6 +22,10 @@ class Node(object):
         self.__attribute[attr] = value
 
     def attribute(self, attr: str):
+        if attr != 'line' and not (attr in self.__attribute):
+            print('Semantic error at Line [%d]: missed attribute' %
+                  (self.__attribute['line']))
+            exit(-1)
         return self.__attribute[attr]
 
     def child(self):
@@ -103,6 +108,7 @@ def build_tree(path: str) -> Node:
                 current.update('type', words[0])
             if words[0] in ['+', '-', '*', '/']:
                 current.update('op', words[0])
+            current.update('line', int(words[-1][1:-2]))
 
             while depth != stack[-1].depth() + 1:
                 stack.pop()
@@ -116,9 +122,21 @@ def build_tree(path: str) -> Node:
     return root
 
 
-def _enter(lexeme: str, t: str, symbols: Dict[str, Dict]):
+def _enter(lexeme: str, t: str, symbols: Dict[str, Dict]) -> str:
     '''在符号表中登录符号
+
+    Args:
+        lexeme: 符号名
+        t: 类型
+        symbols: 符号表
+
+    Returns:
+        如果无语义错误，返回'OK'
+        否则，返回相应语义错误
     '''
+    if lexeme in symbols:
+        return '%s is defined' % (lexeme)
+
     t = t.split()
     if t[0].endswith('*'):
         base = 64
@@ -136,6 +154,8 @@ def _enter(lexeme: str, t: str, symbols: Dict[str, Dict]):
         'size': [int(t[i]) for i in range(1, len(t))]
     }
     CURRENT_OFFSET += size * base
+
+    return 'OK'
 
 
 def _offset(lexeme: str, index: str) -> int:
@@ -342,8 +362,14 @@ def analyze(node: Node, symbols: Dict[str, Dict], tetrads: List[Tetrad],
 
     # 处理声明语句
     if node.word() == 'Defination':
-        _enter(current_child[1].attribute('lexeme'),
-               current_child[0].attribute('type'), symbols)
+        error = _enter(current_child[1].attribute('lexeme'),
+                       current_child[0].attribute('type'), symbols)
+
+        if error != 'OK':
+            print('Semantic error at Line [%d]: %s' %
+                  (current_child[0].attribute('line'), error))
+            exit(-1)
+
         node.update('lexeme', current_child[1].attribute('lexeme'))
     elif node.word() == 'Data':
         if current_child[0].word() == 'Type':
