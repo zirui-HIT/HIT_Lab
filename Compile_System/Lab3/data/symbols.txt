@@ -1,8 +1,10 @@
-a float
-b int
-ret float
-c float*
-d int[100][100]
-sum1 int
-sum2 int
-sum3 int
+x float 0
+y int 32
+ret float 64
+a float 96
+b int 128
+c float* 160
+d int 224
+sum1 int 320224
+sum2 int 320256
+sum3 int 320288

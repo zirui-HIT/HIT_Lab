@@ -105,27 +105,76 @@ def build_tree(path: str) -> Node:
     return root
 
 
-def _enter(lexeme: str, t: str, symbols: Dict[str, str]):
+def _enter(lexeme: str, t: str, symbols: Dict[str, Dict]):
     '''在符号表中登录符号
     '''
-    symbols[lexeme] = t
+    t = t.split()
+    if t[0].endswith('*'):
+        base = 64
+    else:
+        base = SYMBOL[t[0]]
+    size = 1
+    for i in range(1, len(t)):
+        size *= int(t[i])
+
+    global CURRENT_OFFSET
+    symbols[lexeme] = {
+        'type': t[0],
+        'type_size': base,
+        'offset': CURRENT_OFFSET,
+        'size': [int(t[i]) for i in range(1, len(t))]
+    }
+    CURRENT_OFFSET += size * base
+
+
+def _offset(lexeme: str, index: str) -> int:
+    '''计算数组对应的偏置
+
+    Args:
+        lexeme: 变量名
+        index: 角标，格式为"idx1 idx2 ... idxn"
+
+    Returns:
+        若无语义错误，则返回偏置
+        否则，返回-1
+    '''
+    index = index.split()
+    index = [int(x) for x in index]
+
+    lexeme = symbols[lexeme]
+    if len(lexeme['size']) != len(index):
+        return -1
+    if len(index) == 0:
+        return lexeme['offset']
+
+    offset = 0
+    cum = 1
+    for i in range(len(index) - 1, -1, -1):
+        offset += index[i] * cum
+        cum *= lexeme['size'][i]
+
+    return lexeme['offset'] + offset * lexeme['type_size']
 
 
 def _array(const: str, t: str):
     '''生成数组
     '''
-    return '%s[%s]' % (t, const)
+    return '%s %s' % (t, const)
 
 
-TEMP_VARIABLE_CNT = 0
-
-
-def _newtemp():
+def _newtemp() -> str:
     '''生成新的临时变量
+
+    Args:
+        type: 临时变量类型
+
+    Returns:
+        变量名
     '''
     global TEMP_VARIABLE_CNT
     TEMP_VARIABLE_CNT += 1
-    return 't%d' % (TEMP_VARIABLE_CNT)
+    name = 't%d' % (TEMP_VARIABLE_CNT)
+    return name
 
 
 def _gen(op: str, value1: str, value2: str, result: str,
@@ -135,7 +184,18 @@ def _gen(op: str, value1: str, value2: str, result: str,
     tetrads.append(Tetrad(op, value1, value2, result))
 
 
-PARAMETER_QUEUE = []
+def _type(num: str) -> str:
+    '''返回num对应的数值类型
+
+    Args:
+        num: 待检查数值
+
+    Returns:
+        int, float
+    '''
+    if num.isdigit():
+        return 'int'
+    return 'float'
 
 
 def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
@@ -145,6 +205,7 @@ def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
         root: 语法树根
         symbols: 符号表
         tetrads: 四元式序列
+        update: 是否更新符号表
     '''
     current_child = node.child()
 
@@ -242,7 +303,9 @@ def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
                current_child[0].attribute('type'), symbols)
     elif node.word() == 'Data':
         if current_child[0].word() == 'Type':
-            node.update('type', current_child[0].attribute('type') + current_child[1].attribute('point') * '*')
+            node.update(
+                'type', current_child[0].attribute('type') +
+                current_child[1].attribute('point') * '*')
         elif current_child[0].word() == 'Data':
             node.update(
                 'type',
@@ -260,8 +323,8 @@ def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
     if node.word() == 'Assignment':
         _gen(
             '=', current_child[3].attribute('addr'), '-',
-            current_child[0].attribute('lexeme') +
-            current_child[1].attribute('index'), tetrads)
+            _offset(current_child[0].attribute('lexeme'),
+                    current_child[1].attribute('index')), tetrads)
     elif node.word() == 'Value':
         if current_child[0].word() == 'Value':
             node.update('addr', _newtemp())
@@ -276,14 +339,20 @@ def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
         elif current_child[0].word() == '(':
             node.update('addr', current_child[1].attribute('addr'))
         elif current_child[0].word() == 'const':
+            node.update('type', _type(current_child[0].attribute('value')))
+            node.update('value', current_child[0].attribute('value'))
             node.update('addr', _newtemp())
-            _gen('=', current_child[0].attribute('value'), '-',
+            _gen('=', '$' + current_child[0].attribute('value'), '-',
                  node.attribute('addr'), tetrads)
         elif current_child[0].word() == 'id':
             node.update(
-                'addr', current_child[0].attribute('lexeme') +
-                current_child[1].attribute('index'))
+                'addr',
+                _offset(current_child[0].attribute('lexeme'),
+                        current_child[1].attribute('index')))
+            node.update('type',
+                        symbols[current_child[0].attribute('lexeme')]['type'])
         elif current_child[0].word() == 'Call':
+            # TODO type of function
             node.update('addr', _newtemp())
             _gen('=', 'ret', '-', node.attribute('addr'), tetrads)
     elif node.word() == 'Index':
@@ -291,8 +360,8 @@ def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
             node.update('index', '')
         else:
             node.update(
-                'index', '[%s]%s' % (current_child[1].attribute('addr'),
-                                     current_child[3].attribute('index')))
+                'index', '%s %s' % (current_child[1].attribute('value'),
+                                    current_child[3].attribute('index')))
 
     # 处理控制流语句
     if node.word() == 'Module':
@@ -347,6 +416,11 @@ def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
 
 
 if __name__ == '__main__':
+    SYMBOL = {'int': 32, 'float': 32, 'bool': 1}
+    CURRENT_OFFSET = 0
+    PARAMETER_QUEUE = []
+    TEMP_VARIABLE_CNT = 0
+
     root = build_tree('Compile_System/Lab2/data/result.txt')
 
     symbols = {}
@@ -355,7 +429,9 @@ if __name__ == '__main__':
 
     with open('Compile_System/Lab3/data/symbols.txt', 'w') as f:
         for s in symbols:
-            f.write('%s %s\n' % (s, symbols[s]))
+            current = 0
+            f.write('%s %s %d\n' %
+                    (s, symbols[s]['type'], symbols[s]['offset']))
     with open('Compile_System/Lab3/data/tetrads.txt', 'w') as f:
         for i in range(len(tetrads)):
             f.write('L%d: %s \t %s\n' %
