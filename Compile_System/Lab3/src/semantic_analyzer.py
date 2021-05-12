@@ -451,7 +451,7 @@ def analyze(node: Node, symbols: Dict[str, Dict], tetrads: List[Tetrad],
         node.update('type', f['type'])
 
         for i in range(len(f['parameter'])):
-            _gen('=', f['parameter'][i], '-', PARAMETER_QUEUE[i], tetrads)
+            _gen('=', PARAMETER_QUEUE[i], '-', f['parameter'][i], tetrads)
         _gen('push', 'L%d' % (len(tetrads) + 2), '-', '-', tetrads)
         _gen('j', '-', '-', f['start_line'], tetrads)
     elif node.word() == 'Transmit':
