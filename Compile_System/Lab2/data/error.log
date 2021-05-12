@@ -1,5 +1,5 @@
-Syntax error at Line [16]: illegal float
-Syntax error at Line [16]: illegal =
-Syntax error at Line [16]: illegal const
-Syntax error at Line [16]: illegal ;
-Syntax error at Line [18]: illegal int
+Syntax error at Line [22]: illegal float
+Syntax error at Line [22]: illegal =
+Syntax error at Line [22]: illegal const
+Syntax error at Line [22]: illegal ;
+Syntax error at Line [24]: illegal int

@@ -1,3 +1,9 @@
+struct Path{
+    float weight;
+    int[20] next;
+}
+
+
 int sum(float x, int y){
     float ret;
     ret $= x + y;

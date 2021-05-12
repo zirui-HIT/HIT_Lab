@@ -108,7 +108,7 @@ def build_tree(path: str) -> Node:
                 current.update('type', words[0])
             if words[0] in ['+', '-', '*', '/']:
                 current.update('op', words[0])
-            current.update('line', int(words[-1][1:-2]))
+            current.update('line', int(words[-1][1:-1]))
 
             while depth != stack[-1].depth() + 1:
                 stack.pop()
@@ -137,14 +137,8 @@ def _enter(lexeme: str, t: str, symbols: Dict[str, Dict]) -> str:
     if lexeme in symbols:
         return '%s is defined' % (lexeme)
 
+    base, size = _size(t, True)
     t = t.split()
-    if t[0].endswith('*'):
-        base = 64
-    else:
-        base = SYMBOL[t[0]]
-    size = 1
-    for i in range(1, len(t)):
-        size *= int(t[i])
 
     global CURRENT_OFFSET
     symbols[lexeme] = {
@@ -153,9 +147,36 @@ def _enter(lexeme: str, t: str, symbols: Dict[str, Dict]) -> str:
         'offset': CURRENT_OFFSET,
         'size': [int(t[i]) for i in range(1, len(t))]
     }
-    CURRENT_OFFSET += size * base
+    CURRENT_OFFSET += size
 
     return 'OK'
+
+
+def _size(t: str, ret_base: bool = False) -> int:
+    '''计算数据类型对应的字节长度
+
+    Args:
+        t: 数据类型，格式为t num1 num2 ...
+        ret_base: 是否返回基础类型字节长
+
+    Returns:
+        对应字节长度
+    '''
+    global STRUCTS
+    t = t.split()
+    if t[0].endswith('*'):
+        base = 64
+    elif t[0] in STRUCTS:
+        base = STRUCTS[t[0]]['size']
+    else:
+        base = SYMBOL[t[0]]
+    size = 1
+    for i in range(1, len(t)):
+        size *= int(t[i])
+
+    if ret_base:
+        return base, base * size
+    return base * size
 
 
 def _offset(lexeme: str, index: str) -> int:
@@ -229,8 +250,11 @@ def _type(num: str) -> str:
     return 'float'
 
 
-def analyze(node: Node, symbols: Dict[str, Dict], tetrads: List[Tetrad],
-            functions: Dict[str, Dict]):
+def analyze(node: Node,
+            symbols: Dict[str, Dict],
+            tetrads: List[Tetrad],
+            functions: Dict[str, Dict],
+            update: bool = True):
     '''根据语法树生成符号表和四元式序列
 
     Args:
@@ -238,6 +262,7 @@ def analyze(node: Node, symbols: Dict[str, Dict], tetrads: List[Tetrad],
         symbols: 符号表
         tetrads: 四元式序列
         functions: 过程表
+        update: 是否更新符号表
     '''
     current_child = node.child()
 
@@ -357,20 +382,26 @@ def analyze(node: Node, symbols: Dict[str, Dict], tetrads: List[Tetrad],
         return
 
     # 递归调用
-    for c in current_child:
-        analyze(c, symbols, tetrads, functions)
+    if node.word() == 'Struct':
+        for c in current_child:
+            analyze(c, symbols, tetrads, functions, False)
+    else:
+        for c in current_child:
+            analyze(c, symbols, tetrads, functions)
 
     # 处理声明语句
     if node.word() == 'Defination':
-        error = _enter(current_child[1].attribute('lexeme'),
-                       current_child[0].attribute('type'), symbols)
+        if update:
+            error = _enter(current_child[1].attribute('lexeme'),
+                           current_child[0].attribute('type'), symbols)
 
-        if error != 'OK':
-            print('Semantic error at Line [%d]: %s' %
-                  (current_child[0].attribute('line'), error))
-            exit(-1)
+            if error != 'OK':
+                print('Semantic error at Line [%d]: %s' %
+                      (current_child[0].attribute('line'), error))
+                exit(-1)
 
         node.update('lexeme', current_child[1].attribute('lexeme'))
+        node.update('type', current_child[0].attribute('type'))
     elif node.word() == 'Data':
         if current_child[0].word() == 'Type':
             node.update(
@@ -388,6 +419,32 @@ def analyze(node: Node, symbols: Dict[str, Dict], tetrads: List[Tetrad],
             node.update('point', 0)
         else:
             node.update('point', current_child[1].attribute('point') + 1)
+
+    # 处理结构声明语句
+    if node.word() == 'Struct':
+        size = 0
+        current = current_child[3]
+
+        for s in current.attribute('type'):
+            size += _size(s)
+
+        struct = {
+            'size': size,
+            'var': current.attribute('var'),
+            'type': current.attribute('type')
+        }
+
+        global STRUCTS
+        STRUCTS[current_child[1].attribute('lexeme')] = struct
+    elif node.word() == 'Statement':
+        if len(current_child) == 2:
+            node.update('var', [current_child[0].attribute('lexeme')])
+            node.update('type', [current_child[0].attribute('type')])
+        else:
+            node.update('var', [current_child[0].attribute('lexeme')] +
+                        current_child[2].attribute('var'))
+            node.update('type', [current_child[0].attribute('type')] +
+                        current_child[2].attribute('type'))
 
     # 处理赋值语句
     if node.word() == 'Assignment':
@@ -497,13 +554,15 @@ if __name__ == '__main__':
     CURRENT_OFFSET = 0
     PARAMETER_QUEUE = []
     TEMP_VARIABLE_CNT = 0
+    STRUCTS = {}
 
     root = build_tree('Compile_System/Lab2/data/result.txt')
 
     symbols = {}
     tetrads = []
     functions = {}
-    analyze(root, symbols, tetrads, functions)
+    structs = {}
+    analyze(root, symbols, tetrads, functions, structs)
 
     with open('Compile_System/Lab3/data/symbols.txt', 'w') as f:
         for s in symbols:
