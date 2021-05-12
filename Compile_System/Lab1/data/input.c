@@ -30,7 +30,8 @@ int main(){
     }
 
     while(sum3 > 0){
-        printf(sum3);
         sum3 = sum3 - 1;
     }
+
+    return 0;
 }

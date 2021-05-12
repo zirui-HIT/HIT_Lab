@@ -29,41 +29,52 @@ class Node(object):
 
 class Tetrad(object):
     def __init__(self, op, value1, value2, result):
-        self.__op = op
-        self.__value1 = value1
-        self.__value2 = value2
-        self.__result = result
+        self._op = op
+        self._value1 = value1
+        self._value2 = value2
+        self._result = result
 
     def update_result(self, result: str):
-        self.__result = result
+        self._result = result
 
     def __str__(self):
-        if self.__op is None:
+        if self._op is None:
             return ''
-        return '(%s, %s, %s, %s)' % (self.__op, self.__value1, self.__value2,
-                                     self.__result)
+        return '(%s, %s, %s, %s)' % (self._op, self._value1, self._value2,
+                                     self._result)
 
     def operate(self):
-        if self.__op is None:
+        if self._op is None:
             return ''
 
-        if self.__op[0] == 'j':
-            if len(self.__op) > 1:
-                return 'if %s%s%s goto L%s' % (self.__value1, self.__op[1:],
-                                               self.__value2, self.__result)
+        if self._op[0] == 'j':
+            if isinstance(self._result, int):
+                target = 'L' + str(self._result)
             else:
-                return 'goto L%s' % (self.__result)
+                target = self._result
 
-        if self.__op in ['+', '-', '*', '/']:
-            return '%s = %s %s %s' % (self.__result, self.__value1, self.__op,
-                                      self.__value2)
-        if self.__op == '=':
-            return '%s = %s' % (self.__result, self.__value1)
+            if len(self._op) > 1:
+                return 'if %s%s%s goto %s' % (self._value1, self._op[1:],
+                                              self._value2, target)
+            else:
+                return 'goto %s' % (target)
 
-        if self.__op == 'call':
-            return 'call %s' % (self.__result)
-        if self.__op == 'param':
-            return 'param %s' % (self.__result)
+        if self._op in ['+', '-', '*', '/']:
+            return '%s = %s %s %s' % (self._result, self._value1, self._op,
+                                      self._value2)
+        if self._op == '=':
+            return '%s = %s' % (self._result, self._value1)
+
+        if self._op == 'call':
+            return 'call %s' % (self._result)
+        if self._op == 'param':
+            return 'param %s' % (self._result)
+        if self._op == 'pop':
+            return 'pop %s' % (self._result)
+        if self._op == 'push':
+            return 'push %s' % (self._value1)
+        if self._op == 'return':
+            return self._op
 
 
 def build_tree(path: str) -> Node:
@@ -198,14 +209,15 @@ def _type(num: str) -> str:
     return 'float'
 
 
-def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
+def analyze(node: Node, symbols: Dict[str, Dict], tetrads: List[Tetrad],
+            functions: Dict[str, Dict]):
     '''根据语法树生成符号表和四元式序列
 
     Args:
         root: 语法树根
         symbols: 符号表
         tetrads: 四元式序列
-        update: 是否更新符号表
+        functions: 过程表
     '''
     current_child = node.child()
 
@@ -241,16 +253,16 @@ def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
         if len(current_child) == 0:
             node.update('next_list', [])
         elif current_child[0].word() == 'Control':
-            analyze(current_child[0], symbols, tetrads)
+            analyze(current_child[0], symbols, tetrads, functions)
             for x in current_child[0].attribute('next_list'):
                 tetrads[x].update_result(len(tetrads))
 
-            analyze(current_child[1], symbols, tetrads)
+            analyze(current_child[1], symbols, tetrads, functions)
             node.update('next_list', current_child[1].attribute('next_list'))
 
             return
     elif node.word() == 'If':
-        analyze(current_child[2], symbols, tetrads)
+        analyze(current_child[2], symbols, tetrads, functions)
         for i in current_child[2].attribute('true_list'):
             tetrads[i].update_result(len(tetrads))
 
@@ -260,18 +272,18 @@ def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
 
         return
     elif node.word() == 'IfElse':
-        analyze(current_child[2], symbols, tetrads)
+        analyze(current_child[2], symbols, tetrads, functions)
         for i in current_child[2].attribute('true_list'):
             tetrads[i].update_result(len(tetrads))
 
-        analyze(current_child[5], symbols, tetrads)
+        analyze(current_child[5], symbols, tetrads, functions)
         temp_next_list = [len(tetrads)]
         _gen('j', '-', '-', '_', tetrads)
 
         for i in current_child[2].attribute('false_list'):
             tetrads[i].update_result(len(tetrads))
 
-        analyze(current_child[9], symbols, tetrads)
+        analyze(current_child[9], symbols, tetrads, functions)
         node.update(
             'next_list',
             temp_next_list + current_child[5].attribute('next_list') +
@@ -281,26 +293,58 @@ def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
     elif node.word() == 'While':
         temp_quad = len(tetrads)
 
-        analyze(current_child[2], symbols, tetrads)
+        analyze(current_child[2], symbols, tetrads, functions)
         for i in current_child[2].attribute('true_list'):
             tetrads[i].update_result(len(tetrads))
         node.update('next_list', current_child[2].attribute('false_list'))
 
-        analyze(current_child[5], symbols, tetrads)
+        analyze(current_child[5], symbols, tetrads, functions)
         for i in current_child[5].attribute('next_list'):
             tetrads[i].update_result(temp_quad)
 
         _gen('j', '-', '-', temp_quad, tetrads)
         return
 
+    # 处理过程声明语句
+    if node.word() == 'Function':
+        lexeme = current_child[1].attribute('lexeme')
+        start_line = 'L%d' % (len(tetrads))
+
+        for c in current_child:
+            analyze(c, symbols, tetrads, functions)
+
+        functions[lexeme] = {
+            'type': current_child[0].attribute('type'),
+            'parameter': current_child[3].attribute('parameter'),
+            'start_line': start_line
+        }
+        t = _newtemp()
+        _gen('pop', '-', '-', t, tetrads)
+        _gen('j', '-', '-', t, tetrads)
+        return
+    elif node.word() == 'Parameter':
+        for c in current_child:
+            analyze(c, symbols, tetrads, functions)
+        if len(current_child) == 0:
+            node.update('parameter', [])
+        elif len(current_child) == 1:
+            lexeme = current_child[0].attribute('lexeme')
+            node.update('parameter', [lexeme])
+        else:
+            lexeme = current_child[0].attribute('lexeme')
+            node.update('parameter',
+                        [lexeme] + current_child[2].attribute('parameter'))
+        return
+
     # 递归调用
     for c in current_child:
-        analyze(c, symbols, tetrads)
+        analyze(c, symbols, tetrads, functions)
 
     # 处理声明语句
     if node.word() == 'Defination':
         _enter(current_child[1].attribute('lexeme'),
                current_child[0].attribute('type'), symbols)
+        node.update('lexeme', current_child[1].attribute('lexeme'))
     elif node.word() == 'Data':
         if current_child[0].word() == 'Type':
             node.update(
@@ -352,8 +396,8 @@ def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
             node.update('type',
                         symbols[current_child[0].attribute('lexeme')]['type'])
         elif current_child[0].word() == 'Call':
-            # TODO type of function
             node.update('addr', _newtemp())
+            node.update('type', current_child[0].attribute('type'))
             _gen('=', 'ret', '-', node.attribute('addr'), tetrads)
     elif node.word() == 'Index':
         if len(current_child) == 0:
@@ -399,13 +443,17 @@ def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
     # 处理过程调用语句
     global PARAMETER_QUEUE
     if node.word() == 'Call':
-        cnt = 0
-        for t in PARAMETER_QUEUE:
-            _gen('param', '-', '-', t, tetrads)
-            cnt += 1
-        _gen('call', '-', '-',
-             '%s,%s' % (current_child[0].attribute('lexeme'), cnt), tetrads)
+        f = functions[current_child[0].attribute('lexeme')]
+        if len(f['parameter']) != len(PARAMETER_QUEUE):
+            pass
+
         node.update('addr', current_child[0].attribute('lexeme'))
+        node.update('type', f['type'])
+
+        for i in range(len(f['parameter'])):
+            _gen('=', f['parameter'][i], '-', PARAMETER_QUEUE[i], tetrads)
+        _gen('push', 'L%d' % (len(tetrads) + 2), '-', '-', tetrads)
+        _gen('j', '-', '-', f['start_line'], tetrads)
     elif node.word() == 'Transmit':
         if len(current_child) == 0:
             PARAMETER_QUEUE = []
@@ -413,6 +461,9 @@ def analyze(node: Node, symbols: Dict[str, str], tetrads: List[Tetrad]):
             PARAMETER_QUEUE.append(current_child[0].attribute('addr'))
         elif current_child[0].word() == 'Value':
             PARAMETER_QUEUE = [current_child[0].attribute('addr')]
+    elif node.word() == 'Return':
+        if len(current_child) > 1:
+            _gen('=', current_child[1].attribute('addr'), '-', 'ret', tetrads)
 
 
 if __name__ == '__main__':
@@ -425,7 +476,8 @@ if __name__ == '__main__':
 
     symbols = {}
     tetrads = []
-    analyze(root, symbols, tetrads)
+    functions = {}
+    analyze(root, symbols, tetrads, functions)
 
     with open('Compile_System/Lab3/data/symbols.txt', 'w') as f:
         for s in symbols:
