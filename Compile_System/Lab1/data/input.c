@@ -3,9 +3,8 @@ struct Path{
     int[20] next;
 }
 
-
-int sum(float x, int y){
-    float ret;
+int sum(int x, int y){
+    int ret;
     ret $= x + y;
     return ret;
 }
@@ -14,9 +13,7 @@ int main(){
     float a;
     a = 1.6e3;
     int b;
-    b = 00xA5;
-    float * c;
-    c = 10.0;
+    b = 5;
     int[100][100] d;
     d[36][27] = 056;
     b = d[36][27];
@@ -24,8 +21,8 @@ int main(){
 
     int sum1;
     int sum2;
-    sum1 = sum(a, b);
-    sum2 = sum(c, d);
+    sum1 = sum(d[0][0], b);
+    sum2 = sum(d[36][23], d[36][27]);
 
     int sum3;
     if(sum1 < sum2){

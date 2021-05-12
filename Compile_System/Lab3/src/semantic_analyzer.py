@@ -104,6 +104,7 @@ def build_tree(path: str) -> Node:
                 current.update('lexeme', words[-2])
             if words[0] == 'const':
                 current.update('value', words[-2])
+                current.update('type', _type(words[-2]))
             if words[0] in ['int', 'float', 'bool']:
                 current.update('type', words[0])
             if words[0] in ['+', '-', '*', '/']:
@@ -366,6 +367,12 @@ def analyze(node: Node,
         t = _newtemp()
         _gen('pop', '-', '-', t, tetrads)
         _gen('j', '-', '-', t, tetrads)
+
+        if current_child[0].attribute('type') != current_child[6].attribute(
+                'type'):
+            print("Semantic error at Line [%d]: %s" %
+                  (current_child[2].attribute('line'), 'type mismatch'))
+
         return
     elif node.word() == 'Parameter':
         for c in current_child:
@@ -379,6 +386,20 @@ def analyze(node: Node,
             lexeme = current_child[0].attribute('lexeme')
             node.update('parameter',
                         [lexeme] + current_child[2].attribute('parameter'))
+        return
+    elif node.word() == 'Process':
+        for c in current_child:
+            analyze(c, symbols, tetrads, functions)
+
+        node.update('type', current_child[1].attribute('type'))
+        return
+    elif node.word() == 'Return':
+        for c in current_child:
+            analyze(c, symbols, tetrads, functions)
+
+        node.update('type', current_child[1].attribute('type'))
+        if len(current_child) > 1:
+            _gen('=', current_child[1].attribute('addr'), '-', 'ret', tetrads)
         return
 
     # 递归调用
@@ -448,19 +469,39 @@ def analyze(node: Node,
 
     # 处理赋值语句
     if node.word() == 'Assignment':
+        if symbols[current_child[0].attribute(
+                'lexeme')]['type'] != current_child[3].attribute('type'):
+            print("Semantic error at Line [%d]: %s" %
+                  (current_child[2].attribute('line'), 'not same type'))
+            exit(-1)
+
+        if len(symbols[current_child[0].attribute('lexeme')]['size']) != len(
+                current_child[1].attribute('index').split()):
+            print("Semantic error at Line [%d]: %s" %
+                  (current_child[2].attribute('line'), 'not match array dim'))
+            exit(-1)
+
         _gen(
             '=', current_child[3].attribute('addr'), '-',
             _offset(current_child[0].attribute('lexeme'),
                     current_child[1].attribute('index')), tetrads)
     elif node.word() == 'Value':
         if current_child[0].word() == 'Value':
+            if current_child[0].attribute(
+                    'type') != current_child[2].attribute('type'):
+                print("Semantic error at Line [%d]: %s" %
+                      (current_child[1].attribute('line'), 'not same type'))
+                exit(-1)
+
             node.update('addr', _newtemp())
+            node.update('type', current_child[0].attribute('type'))
             _gen(current_child[1].attribute('op'),
                  current_child[0].attribute('addr'),
                  current_child[2].attribute('addr'), node.attribute('addr'),
                  tetrads)
         elif current_child[0].word() == '-':
             node.update('addr', _newtemp())
+            node.update('type', current_child[1].attribute('type'))
             _gen('*', -1, current_child[1].attribute('addr'),
                  node.attribute('addr'), tetrads)
         elif current_child[0].word() == '(':
@@ -486,6 +527,11 @@ def analyze(node: Node,
         if len(current_child) == 0:
             node.update('index', '')
         else:
+            if not (current_child[1].attribute('value').isdigit()):
+                print("Semantic error at Line [%d]: %s" %
+                      (current_child[1].attribute('line'), 'must int index'))
+                exit(-1)
+
             node.update(
                 'index', '%s %s' % (current_child[1].attribute('value'),
                                     current_child[3].attribute('index')))
@@ -526,27 +572,41 @@ def analyze(node: Node,
     # 处理过程调用语句
     global PARAMETER_QUEUE
     if node.word() == 'Call':
+        if not (current_child[0].attribute('lexeme') in functions):
+            print("Semantic error at Line [%d]: %s" %
+                  (current_child[0].attribute('line'),
+                   'function is not defined'))
+
         f = functions[current_child[0].attribute('lexeme')]
         if len(f['parameter']) != len(PARAMETER_QUEUE):
-            pass
+            print("Semantic error at Line [%d]: %s" %
+                  (current_child[0].attribute('line'),
+                   'function parameter mismatch'))
+            exit(-1)
 
         node.update('addr', current_child[0].attribute('lexeme'))
         node.update('type', f['type'])
 
         for i in range(len(f['parameter'])):
-            _gen('=', PARAMETER_QUEUE[i], '-', f['parameter'][i], tetrads)
+            p_type = symbols[f['parameter'][i]]['type']
+            t_type = PARAMETER_QUEUE[i].attribute('type')
+            if p_type != t_type:
+                print("Semantic error at Line [%d]: %s" %
+                      (current_child[0].attribute('line'),
+                       'function parameter mismatch'))
+                exit(-1)
+
+            _gen('=', PARAMETER_QUEUE[i].attribute('addr'), '-',
+                 f['parameter'][i], tetrads)
         _gen('push', 'L%d' % (len(tetrads) + 2), '-', '-', tetrads)
         _gen('j', '-', '-', f['start_line'], tetrads)
     elif node.word() == 'Transmit':
         if len(current_child) == 0:
             PARAMETER_QUEUE = []
         elif current_child[-1].word() == 'Transmit':
-            PARAMETER_QUEUE.append(current_child[0].attribute('addr'))
+            PARAMETER_QUEUE.append(current_child[0])
         elif current_child[0].word() == 'Value':
-            PARAMETER_QUEUE = [current_child[0].attribute('addr')]
-    elif node.word() == 'Return':
-        if len(current_child) > 1:
-            _gen('=', current_child[1].attribute('addr'), '-', 'ret', tetrads)
+            PARAMETER_QUEUE = [current_child[0]]
 
 
 if __name__ == '__main__':
