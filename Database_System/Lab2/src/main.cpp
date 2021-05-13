@@ -66,6 +66,7 @@ int main() {
             new_file.writePage(new_page);
         }
 
+        /*
         // Iterate through all pages in the file.
         for (FileIterator iter = new_file.begin();
              iter != new_file.end();
@@ -78,6 +79,7 @@ int main() {
                           << " on page " << (*iter).page_number() << "\n";
             }
         }
+        */
 
         // Retrieve the third page and add another record to it.
         Page third_page = new_file.readPage(third_page_number);

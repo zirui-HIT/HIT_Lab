@@ -53,6 +53,7 @@ namespace badgerdb
 	void BufMgr::allocBuf(FrameId &frame)
 	{
 		FrameId lastClockHand = clockHand;
+		unsigned int pinnedCount = 0;
 		while (true)
 		{
 			advanceClock();
@@ -64,8 +65,13 @@ namespace badgerdb
 				bufDescTable[clockHand].valid = true;
 				return;
 			}
-			if (bufDescTable[clockHand].pinCnt > 0)
+			if (bufDescTable[clockHand].pinCnt > 0){
+				pinnedCount += 1;
+				if(pinnedCount == numBufs){
+					throw BufferExceededException();
+				}
 				continue;
+			}
 			if (bufDescTable[clockHand].refbit)
 			{
 				bufDescTable[clockHand].refbit = false;
@@ -91,6 +97,7 @@ namespace badgerdb
 
 			if (lastClockHand == clockHand)
 				throw BufferExceededException();
+			break;
 		}
 	}
 
@@ -144,6 +151,27 @@ namespace badgerdb
 
 	void BufMgr::flushFile(const File *file)
 	{
+		for(FrameId i = 0; i < numBufs; i++){
+			if(bufDescTable[i].file == file){
+				BufDesc currentDesc = bufDescTable[i];
+				if(!currentDesc.valid){
+					// empty desc
+					throw BadBufferException(i, currentDesc.dirty, currentDesc.valid, currentDesc.refbit);
+				}
+				if(currentDesc.pinCnt > 0){
+					// desc is still used
+					throw PagePinnedException(file->filename(), currentDesc.pageNo, i);
+				}
+				if(currentDesc.dirty){
+					// to be writen back
+					currentDesc.file->writePage(bufPool[i]);
+					currentDesc.dirty = false;
+				}
+
+				hashTable->remove(file, currentDesc.pageNo);
+				currentDesc.Clear();
+			}
+		}
 	}
 
 	void BufMgr::allocPage(File *file, PageId &pageNo, Page *&page)
