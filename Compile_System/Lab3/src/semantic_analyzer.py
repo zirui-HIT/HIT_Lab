@@ -3,6 +3,14 @@ from typing import Dict, List
 
 
 class Node(object):
+    '''语法分析树节点
+
+    Args:
+        __word: 节点对应符号
+        __depth: 节点深度
+        __attribute: 节点属性
+        __child: 子节点
+    '''
     def __init__(self, word: str, depth: int):
         self.__word = word
         self.__depth = depth
@@ -33,6 +41,14 @@ class Node(object):
 
 
 class Tetrad(object):
+    '''四元组
+    
+    Args:
+        _op: 操作符
+        _value1: 源操作数1
+        _value2: 源操作数2
+        _result: 目的操作数
+    '''
     def __init__(self, op, value1, value2, result):
         self._op = op
         self._value1 = value1
@@ -408,7 +424,7 @@ def analyze(node: Node,
             analyze(c, symbols, tetrads, functions, False)
     else:
         for c in current_child:
-            analyze(c, symbols, tetrads, functions)
+            analyze(c, symbols, tetrads, functions, update)
 
     # 处理声明语句
     if node.word() == 'Defination':

@@ -17,10 +17,13 @@ Type -> int | {Type.type = 'int';}
 Struct -> struct id { Statement }
 Statement -> Defination ; | Defination ; Statement
 
-Function -> Data id ( Parameter ) { Process }
-Parameter -> epsilon | Defination | Defination , Parameter
+Function -> Data id {start_line[id.lexeme] = current_line} ( Parameter ) { Process } {Function.parameter = Parameter.parameter; Function.type = Data.type}
+Parameter -> epsilon | 
+             Defination | {Parameter.parameter = [Defination]}
+             Defination , Parameter {Parameter.parameter = [Defination] + Parameter.parameter}
 Process -> Module Return
-Return -> return id Index ; | epsilon
+Return -> return id Index ; | {ret = address(id.lexeme, Index.index); pop ret}
+          epsilon
 
 Assignment -> id Index = Value {Assignment.code = gen(id + Index.index '=' Value.addr);}
 Value -> Value + Value | {Value.addr = newtemp(); Value.code = gen(Value.addr '=' Value.addr '+' Value.addr;)}
@@ -55,7 +58,7 @@ Relop -> < {Relop.value = '<'} |
          > {Relop.value = '>'} | 
          >= {Relop.value = '>='}
 
-Call -> id ( Transmit )
+Call -> {push current_line} id {goto start_line[id.lexeme]} ( Transmit )
 Transmit -> epsilon | Value | Value , Transmit
 
 end
