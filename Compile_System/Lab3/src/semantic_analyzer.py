@@ -11,6 +11,7 @@ class Node(object):
         __attribute: 节点属性
         __child: 子节点
     '''
+
     def __init__(self, word: str, depth: int):
         self.__word = word
         self.__depth = depth
@@ -42,13 +43,14 @@ class Node(object):
 
 class Tetrad(object):
     '''四元组
-    
+
     Args:
         _op: 操作符
         _value1: 源操作数1
         _value2: 源操作数2
         _result: 目的操作数
     '''
+
     def __init__(self, op, value1, value2, result):
         self._op = op
         self._value1 = value1
@@ -209,6 +211,9 @@ def _offset(lexeme: str, index: str) -> int:
     '''
     index = index.split()
     index = [int(x) for x in index]
+
+    if not(lexeme in symbols):
+        return -1
 
     lexeme = symbols[lexeme]
     if len(lexeme['size']) != len(index):
@@ -486,9 +491,9 @@ def analyze(node: Node,
     # 处理赋值语句
     if node.word() == 'Assignment':
         if symbols[current_child[0].attribute(
-                'lexeme')]['type'] != current_child[3].attribute('type'):
+                'lexeme')]['type'] != current_child[4].attribute('type'):
             print("Semantic error at Line [%d]: %s" %
-                  (current_child[2].attribute('line'), 'not same type'))
+                  (current_child[3].attribute('line'), 'not same type'))
             exit(-1)
 
         if len(symbols[current_child[0].attribute('lexeme')]['size']) != len(
@@ -497,10 +502,18 @@ def analyze(node: Node,
                   (current_child[2].attribute('line'), 'not match array dim'))
             exit(-1)
 
-        _gen(
-            '=', current_child[3].attribute('addr'), '-',
-            _offset(current_child[0].attribute('lexeme'),
-                    current_child[1].attribute('index')), tetrads)
+        if not(symbols[current_child[0].attribute('lexeme')]['type'] in structs) and len(current_child[2].attribute('attribute')) != 0:
+            print("Semantic error at Line [%d]: %s" %
+                  (current_child[2].attribute('line'), '%s is not sturct' % (current_child[1].attribute('lexeme'))))
+
+        offset = _offset(current_child[0].attribute('lexeme'),
+                         current_child[1].attribute('index'))
+        if offset == -1:
+            print('Semantic error at Line [%d]: %s' % (current_child[1].attribute(
+                'line'), '%s is not defined' % (current_child[0].attribute('lexeme'))))
+            exit(-1)
+
+        _gen('=', current_child[4].attribute('addr'), '-', offset, tetrads)
     elif node.word() == 'Value':
         if current_child[0].word() == 'Value':
             if current_child[0].attribute(
@@ -533,8 +546,15 @@ def analyze(node: Node,
                 'addr',
                 _offset(current_child[0].attribute('lexeme'),
                         current_child[1].attribute('index')))
+
+            if not(current_child[0].attribute('lexeme') in symbols):
+                print('Semantic error at Line [%d]: %s' % (current_child[1].attribute(
+                    'line'), '%s is not defined' % (current_child[0].attribute('lexeme'))))
+                exit(-1)
+
             node.update('type',
                         symbols[current_child[0].attribute('lexeme')]['type'])
+            node.update('attribute', current_child[2].attribute('attribute'))
         elif current_child[0].word() == 'Call':
             node.update('addr', _newtemp())
             node.update('type', current_child[0].attribute('type'))
@@ -551,6 +571,12 @@ def analyze(node: Node,
             node.update(
                 'index', '%s %s' % (current_child[1].attribute('value'),
                                     current_child[3].attribute('index')))
+    elif node.word() == 'Attribute':
+        if len(current_child) == 0:
+            node.update('attribute', [])
+        else:
+            node.update('attribute', current_child[0].attribute(
+                'attribute') + [current_child[2].attribute('lexeme')])
 
     # 处理控制流语句
     if node.word() == 'Module':
@@ -592,6 +618,7 @@ def analyze(node: Node,
             print("Semantic error at Line [%d]: %s" %
                   (current_child[0].attribute('line'),
                    'function is not defined'))
+            exit(-1)
 
         f = functions[current_child[0].attribute('lexeme')]
         if len(f['parameter']) != len(PARAMETER_QUEUE):
@@ -632,13 +659,22 @@ if __name__ == '__main__':
     TEMP_VARIABLE_CNT = 0
     STRUCTS = {}
 
-    root = build_tree('Compile_System/Lab2/data/result.txt')
+    root = build_tree('Compile_System/Lab3/data/test/accept.txt')
+    # root = build_tree('Compile_System/Lab3/data/test/multi_defintion.txt')
+    # root = build_tree('Compile_System/Lab3/data/test/use_before_defintion.txt')
+    # root = build_tree('Compile_System/Lab3/data/test/assignment_mismatch.txt')
+    # root = build_tree('Compile_System/Lab3/data/test/float_array_index.txt')
+    # root = build_tree('Compile_System/Lab3/data/test/mismatch_array_operate.txt')
+    # root = build_tree('Compile_System/Lab3/data/test/undefined_function.txt')
+    # root = build_tree('Compile_System/Lab3/data/test/mismatch_parameter_type.txt')
+    # root = build_tree('Compile_System/Lab3/data/test/mismatch_return_type.txt')
+    # root = build_tree('Compile_System/Lab3/data/test/mismatch_struct_type.txt')
 
     symbols = {}
     tetrads = []
     functions = {}
     structs = {}
-    analyze(root, symbols, tetrads, functions, structs)
+    analyze(root, symbols, tetrads, functions, True)
 
     with open('Compile_System/Lab3/data/symbols.txt', 'w') as f:
         for s in symbols:

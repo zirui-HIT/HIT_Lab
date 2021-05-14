@@ -13,12 +13,13 @@ Parameter -> epsilon | Defination | Defination , Parameter
 Process -> Module Return
 Return -> return Value ; | epsilon
 
-Assignment -> id Index = Value
+Assignment -> id Index Attribute = Value
 Value -> Value + Value | Value - Value | Value * Value | Value / Value | Call
 Value -> - Value
 Value -> ( Value )
-Value -> const | id Index
+Value -> const | id Index Attribute
 Index -> [ Value ] Index | epsilon
+Attribute -> epsilon | Attribute . id
 
 Control -> If | IfElse | While
 If -> if ( Condition ) { Module }
