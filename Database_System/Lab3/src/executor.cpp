@@ -302,6 +302,9 @@ namespace badgerdb
       }
     }
 
+    vector<vector<string>> block;
+    const int BLOCK_SIZE = 100;
+
     for (badgerdb::FileIterator leftPage = left.begin(); leftPage != left.end(); leftPage++)
     {
       badgerdb::Page *bufferedLeftPage;
@@ -318,38 +321,93 @@ namespace badgerdb
         {
           vector<string> leftInfo = analyze(*leftRecord, leftTableSchema);
           numUsedBufPages += 1;
+          block.push_back(leftInfo);
+          if (block.size() < BLOCK_SIZE)
+          {
+            continue;
+          }
 
           for (badgerdb::PageIterator rightRecord = bufferedRightPage->begin(); rightRecord != bufferedRightPage->end(); rightRecord++)
           {
-            vector<string> rightInfo = analyze(*rightRecord, rightTableSchema);
             numUsedBufPages += 1;
-
-            if (leftInfo[leftForeignKeyId] == rightInfo[rightForeignKeyId])
+            for (int i = 0; i < block.size(); i++)
             {
-              string current_line = "INSERT INTO TEMP_TABLE VALUES (" + leftInfo[0];
-              for (int i = 1; i < leftTableSchema.getAttrCount(); i++)
+              vector<string> leftInfo = block[i];
+              vector<string> rightInfo = analyze(*rightRecord, rightTableSchema);
+
+              if (leftInfo[leftForeignKeyId] == rightInfo[rightForeignKeyId])
               {
-                current_line = current_line + ", " + leftInfo[i];
-              }
-              for (int i = 0; i < rightTableSchema.getAttrCount(); i++)
-              {
-                bool flag = false;
-                for (int j = 0; j < leftTableSchema.getAttrCount(); j++)
+                string current_line = "INSERT INTO TEMP_TABLE VALUES (" + leftInfo[0];
+                for (int i = 1; i < leftTableSchema.getAttrCount(); i++)
                 {
-                  if (leftTableSchema.getAttrName(j) == rightTableSchema.getAttrName(i) && leftTableSchema.getAttrType(j) == rightTableSchema.getAttrType(i))
+                  current_line = current_line + ", " + leftInfo[i];
+                }
+                for (int i = 0; i < rightTableSchema.getAttrCount(); i++)
+                {
+                  bool flag = false;
+                  for (int j = 0; j < leftTableSchema.getAttrCount(); j++)
                   {
-                    flag = true;
+                    if (leftTableSchema.getAttrName(j) == rightTableSchema.getAttrName(i) && leftTableSchema.getAttrType(j) == rightTableSchema.getAttrType(i))
+                    {
+                      flag = true;
+                    }
+                  }
+                  if (flag)
+                  {
+                    current_line = current_line + ", " + rightInfo[i];
                   }
                 }
-                if(flag){
-                  current_line = current_line + ", " + rightInfo[i];
-                }
-              }
-              current_line = current_line + ");";
+                current_line = current_line + ");";
 
-              string tuple = HeapFileManager::createTupleFromSQLStatement(current_line, catalog);
-              numResultTuples += 1;
-              HeapFileManager::insertTuple(tuple, resultFile, bufMgr);
+                string tuple = HeapFileManager::createTupleFromSQLStatement(current_line, catalog);
+                numResultTuples += 1;
+                HeapFileManager::insertTuple(tuple, resultFile, bufMgr);
+              }
+            }
+          }
+
+          block.clear();
+        }
+
+        // process record left in block
+        if (block.size() > 0)
+        {
+          for (badgerdb::PageIterator rightRecord = bufferedRightPage->begin(); rightRecord != bufferedRightPage->end(); rightRecord++)
+          {
+            numUsedBufPages += 1;
+            for (int i = 0; i < block.size(); i++)
+            {
+              vector<string> leftInfo = block[i];
+              vector<string> rightInfo = analyze(*rightRecord, rightTableSchema);
+
+              if (leftInfo[leftForeignKeyId] == rightInfo[rightForeignKeyId])
+              {
+                string current_line = "INSERT INTO TEMP_TABLE VALUES (" + leftInfo[0];
+                for (int i = 1; i < leftTableSchema.getAttrCount(); i++)
+                {
+                  current_line = current_line + ", " + leftInfo[i];
+                }
+                for (int i = 0; i < rightTableSchema.getAttrCount(); i++)
+                {
+                  bool flag = false;
+                  for (int j = 0; j < leftTableSchema.getAttrCount(); j++)
+                  {
+                    if (leftTableSchema.getAttrName(j) == rightTableSchema.getAttrName(i) && leftTableSchema.getAttrType(j) == rightTableSchema.getAttrType(i))
+                    {
+                      flag = true;
+                    }
+                  }
+                  if (flag)
+                  {
+                    current_line = current_line + ", " + rightInfo[i];
+                  }
+                }
+                current_line = current_line + ");";
+
+                string tuple = HeapFileManager::createTupleFromSQLStatement(current_line, catalog);
+                numResultTuples += 1;
+                HeapFileManager::insertTuple(tuple, resultFile, bufMgr);
+              }
             }
           }
         }
@@ -399,7 +457,8 @@ vector<string> analyze(string record, badgerdb::TableSchema schema)
     {
       length = current_length;
       int current = 0;
-      for(int i = 0; i < length; i++){
+      for (int i = 0; i < length; i++)
+      {
         current += (int)record[i + prev] * pow(128, 3 - i);
       }
       ret.push_back(to_string(current));
