@@ -249,7 +249,6 @@ class NestedLoopJoinOperator : public JoinOperator {
                      rightTableSchema,
                      catalog,
                      bufMgr) {
-    // nothing
   }
 
   /**

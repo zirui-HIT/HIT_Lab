@@ -27,16 +27,26 @@
 
 using namespace badgerdb;
 
-void createDatabase(BufMgr* bufMgr, Catalog* catalog) {
+void createDatabase(BufMgr *bufMgr, Catalog *catalog)
+{
   // Create table schemas
+  string leftTableFilename = "r.tbl";
+  string rightTableFilename = "s.tbl";
+  try
+  {
+    File::remove(leftTableFilename);
+    File::remove(rightTableFilename);
+  }
+  catch (FileNotFoundException e)
+  {
+  }
+
   TableSchema leftTableSchema = TableSchema::fromSQLStatement(
       "CREATE TABLE r (a CHAR(8) UNIQUE NOT NULL, b INT);");
   TableSchema rightTableSchema = TableSchema::fromSQLStatement(
       "CREATE TABLE s (b INT UNIQUE NOT NULL, c VARCHAR(8));");
 
   // Create table files
-  string leftTableFilename = "r.tbl";
-  string rightTableFilename = "s.tbl";
   File leftTableFile = File::create(leftTableFilename);
   File rightTableFile = File::create(rightTableFilename);
 
@@ -48,7 +58,8 @@ void createDatabase(BufMgr* bufMgr, Catalog* catalog) {
   int leftTableRows = 500;
   int rightTableRows = 100;
 
-  for (int i = 0; i < leftTableRows; i++) {
+  for (int i = 0; i < leftTableRows; i++)
+  {
     stringstream ss;
     ss << "INSERT INTO r VALUES ('r" << i << "', " << (i % rightTableRows)
        << ");";
@@ -57,7 +68,8 @@ void createDatabase(BufMgr* bufMgr, Catalog* catalog) {
     HeapFileManager::insertTuple(tuple, leftTableFile, bufMgr);
   }
 
-  for (int i = 0; i < rightTableRows; i++) {
+  for (int i = 0; i < rightTableRows; i++)
+  {
     stringstream ss;
     ss << "INSERT INTO s VALUES (" << i << ", 's" << i << "');";
     string tuple =
@@ -72,7 +84,8 @@ void createDatabase(BufMgr* bufMgr, Catalog* catalog) {
   rightTableScanner.print();
 }
 
-void testOnePassJoin(BufMgr* bufMgr, Catalog* catalog) {
+void testOnePassJoin(BufMgr *bufMgr, Catalog *catalog)
+{
   TableId leftTableId = catalog->getTableId("r");
   TableId rightTableId = catalog->getTableId("s");
   TableSchema leftTableSchema = catalog->getTableSchema(leftTableId);
@@ -99,7 +112,8 @@ void testOnePassJoin(BufMgr* bufMgr, Catalog* catalog) {
   scanner.print();
 }
 
-void testNestedLoopJoin(BufMgr* bufMgr, Catalog* catalog) {
+void testNestedLoopJoin(BufMgr *bufMgr, Catalog *catalog)
+{
   TableId leftTableId = catalog->getTableId("r");
   TableId rightTableId = catalog->getTableId("s");
   TableSchema leftTableSchema = catalog->getTableSchema(leftTableId);
@@ -115,7 +129,16 @@ void testNestedLoopJoin(BufMgr* bufMgr, Catalog* catalog) {
   // Join two tables using one-pass join
   string filename = leftTableSchema.getTableName() + "_NLJ_" +
                     rightTableSchema.getTableName() + ".tbl";
+  try
+  {
+    File::remove(filename);
+  }
+  catch (FileNotFoundException e)
+  {
+  }
   File resultFile = File::create(filename);
+  catalog->addTableSchema(resultSchema, filename);
+
   joinOperator.execute(10, resultFile);
 
   // Print running statistics
@@ -126,7 +149,8 @@ void testNestedLoopJoin(BufMgr* bufMgr, Catalog* catalog) {
   scanner.print();
 }
 
-void testGraceHashJoin(BufMgr* bufMgr, Catalog* catalog) {
+void testGraceHashJoin(BufMgr *bufMgr, Catalog *catalog)
+{
   TableId leftTableId = catalog->getTableId("r");
   TableId rightTableId = catalog->getTableId("s");
   TableSchema leftTableSchema = catalog->getTableSchema(leftTableId);
@@ -155,13 +179,14 @@ void testGraceHashJoin(BufMgr* bufMgr, Catalog* catalog) {
   scanner.print();
 }
 
-int main() {
+int main()
+{
   // Create buffer pool
   int availableBufPages = 256;
-  BufMgr* bufMgr = new BufMgr(availableBufPages);
+  BufMgr *bufMgr = new BufMgr(availableBufPages);
 
   // Create system catalog
-  Catalog* catalog = new Catalog("lab3");
+  Catalog *catalog = new Catalog("lab3");
 
   // Create tables
   createDatabase(bufMgr, catalog);
