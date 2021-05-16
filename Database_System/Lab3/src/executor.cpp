@@ -344,12 +344,13 @@ namespace badgerdb
                 }
                 for (int i = 0; i < rightTableSchema.getAttrCount(); i++)
                 {
-                  bool flag = false;
+                  bool flag = true;
                   for (int j = 0; j < leftTableSchema.getAttrCount(); j++)
                   {
                     if (leftTableSchema.getAttrName(j) == rightTableSchema.getAttrName(i) && leftTableSchema.getAttrType(j) == rightTableSchema.getAttrType(i))
                     {
-                      flag = true;
+                      flag = false;
+                      break;
                     }
                   }
                   if (flag)
@@ -389,12 +390,13 @@ namespace badgerdb
                 }
                 for (int i = 0; i < rightTableSchema.getAttrCount(); i++)
                 {
-                  bool flag = false;
+                  bool flag = true;
                   for (int j = 0; j < leftTableSchema.getAttrCount(); j++)
                   {
                     if (leftTableSchema.getAttrName(j) == rightTableSchema.getAttrName(i) && leftTableSchema.getAttrType(j) == rightTableSchema.getAttrType(i))
                     {
-                      flag = true;
+                      flag = false;
+                      break;
                     }
                   }
                   if (flag)
