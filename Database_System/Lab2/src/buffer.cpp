@@ -62,12 +62,13 @@ namespace badgerdb
 			if (!bufDescTable[clockHand].valid)
 			{
 				frame = clockHand;
-				bufDescTable[clockHand].valid = true;
 				return;
 			}
-			if (bufDescTable[clockHand].pinCnt > 0){
+			if (bufDescTable[clockHand].pinCnt > 0)
+			{
 				pinnedCount += 1;
-				if(pinnedCount == numBufs){
+				if (pinnedCount == numBufs)
+				{
 					throw BufferExceededException();
 				}
 				continue;
@@ -151,25 +152,25 @@ namespace badgerdb
 
 	void BufMgr::flushFile(const File *file)
 	{
-		for(FrameId i = 0; i < numBufs; i++){
-			if(bufDescTable[i].file == file){
-				BufDesc currentDesc = bufDescTable[i];
-				if(!currentDesc.valid){
-					// empty desc
-					throw BadBufferException(i, currentDesc.dirty, currentDesc.valid, currentDesc.refbit);
+		for (FrameId fi = 0; fi < numBufs; fi++)
+		{
+			if (bufDescTable[fi].file == file)
+			{
+				if (!bufDescTable[fi].valid)
+				{
+					throw BadBufferException(fi, bufDescTable[fi].dirty, bufDescTable[fi].valid, bufDescTable[fi].refbit);
 				}
-				if(currentDesc.pinCnt > 0){
-					// desc is still used
-					throw PagePinnedException(file->filename(), currentDesc.pageNo, i);
+				if (bufDescTable[fi].pinCnt > 0)
+				{
+					throw PagePinnedException(file->filename(), bufDescTable[fi].pageNo, fi);
 				}
-				if(currentDesc.dirty){
-					// to be writen back
-					currentDesc.file->writePage(bufPool[i]);
-					currentDesc.dirty = false;
+				if (bufDescTable[fi].dirty)
+				{
+					bufDescTable[fi].file->writePage(bufPool[fi]);
+					bufDescTable[fi].dirty = false;
 				}
-
-				hashTable->remove(file, currentDesc.pageNo);
-				currentDesc.Clear();
+				hashTable->remove(file, bufDescTable[fi].pageNo);
+				bufDescTable[fi].Clear();
 			}
 		}
 	}
@@ -188,6 +189,18 @@ namespace badgerdb
 
 	void BufMgr::disposePage(File *file, const PageId PageNo)
 	{
+		FrameId frame;
+		try
+		{
+			hashTable->lookup(file, PageNo, frame);
+			hashTable->remove(file, PageNo);
+			bufDescTable[frame].Clear();
+		}
+		catch (HashNotFoundException e)
+		{
+			//not in the table; do nothing
+		}
+		file->deletePage(PageNo);
 	}
 
 	void BufMgr::printSelf(void)
