@@ -123,20 +123,20 @@ class SVM(Classifier):
 
 
 if __name__ == '__main__':
-    TRAIN_PATH = 'Lab2/data/raw/classification_train.json'
-    VALID_PATH = 'Lab2/data/raw/classification_valid.json'
+    TRAIN_PATH = 'Information_Retrieval/Lab2/data/raw/classification_train.json'
+    VALID_PATH = 'Information_Retrieval/Lab2/data/raw/classification_valid.json'
     from data import DataManager
     train_data = DataManager.load('train', TRAIN_PATH)
     valid_data = DataManager.load('valid', VALID_PATH)
 
-    VOCAB_PATH = 'Lab2/data/vocabulary.json'
-    STOPS_PATH = 'Lab2/data/stopwords(new).txt'
+    VOCAB_PATH = 'Information_Retrieval/Lab2/data/vocabulary.json'
+    STOPS_PATH = 'Information_Retrieval/Lab2/data/stopwords(new).txt'
     from tokenizer import Tokenizer
     tokenizer = Tokenizer(STOPS_PATH, VOCAB_PATH, 2)
     train_data.update(tokenizer, 'question', 'vector')
     valid_data.update(tokenizer, 'question', 'vector')
 
-    VECTO_PATH = 'Lab2/model/vectorizer.pkl'
+    VECTO_PATH = 'Information_Retrieval/Lab2/model/vectorizer.pkl'
     from vectorizer import Vectorizer
     vectorizer = Vectorizer()
     vectorizer.load(VECTO_PATH)
@@ -149,7 +149,7 @@ if __name__ == '__main__':
     train_y = train_data.get('field')
     classifier.fit(train_x, train_y)
 
-    CLASS_PATH = 'Lab2/model/'
+    CLASS_PATH = 'Information_Retrieval/Lab2/model/'
     classifier.dump(CLASS_PATH + 'SVM_classifier_info.json',
                     CLASS_PATH + 'SVM_classifier_model.pkl')
 
