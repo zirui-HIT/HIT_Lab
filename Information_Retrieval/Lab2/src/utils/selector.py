@@ -120,15 +120,15 @@ def longest_common_sequence(S: str, T: str) -> int:
 
 
 if __name__ == '__main__':
-    DOCUM_PATH = 'Lab2/data/raw/passages_multi_sentences.json'
+    DOCUM_PATH = 'Information_Retrieval/Lab2/data/raw/passages_multi_sentences.json'
     from data import DataManager
     document = DataManager.load('document', DOCUM_PATH).get('document')
 
-    SAVE_PATH = 'Lab2/model/LR_selector.pkl'
+    SAVE_PATH = 'Information_Retrieval/Lab2/model/LR_selector.pkl'
     selector = Selector()
 
     # train
-    TRAIN_PATH = 'Lab2/data/raw/QA_train.json'
+    TRAIN_PATH = 'Information_Retrieval/Lab2/data/raw/QA_train.json'
     train_data = DataManager.load('train', TRAIN_PATH)
     train_question = train_data.get('question')
     train_pid = train_data.get('pid')
@@ -141,7 +141,7 @@ if __name__ == '__main__':
     # valid
     selector.load(SAVE_PATH)
 
-    VALID_PATH = 'Lab2/data/raw/QA_valid.json'
+    VALID_PATH = 'Information_Retrieval/Lab2/data/raw/QA_valid.json'
     valid_data = DataManager.load('train', VALID_PATH)
     valid_question = valid_data.get('question')
     valid_pid = valid_data.get('pid')
