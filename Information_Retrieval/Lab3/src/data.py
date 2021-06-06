@@ -111,7 +111,7 @@ class DataManager(object):
 
         self.__tokenizer = Tokenizer()
         self.__vectorizer = Vectorizer()
-        self.__vectorizer.load('Lab3/model/vectorizer.pkl')
+        self.__vectorizer.load('Information_Retrieval/Lab3/model/vectorizer.pkl')
 
         if name != 'data':
             self.__data = deepcopy(data)

@@ -59,10 +59,10 @@ class Ui_MainWindow(object):
         # 初始化数据库
         from data import DataManager
 
-        USER_PATH = 'Lab3/data/user.json'
+        USER_PATH = 'Information_Retrieval/Lab3/data/user.json'
         self.user_data = DataManager.load('user', USER_PATH)
 
-        DATA_PATH = 'Lab3/data/data.json'
+        DATA_PATH = 'Information_Retrieval/Lab3/data/data.json'
         self.data = DataManager.load('data', DATA_PATH)
 
         # 初始化当前用户信息
